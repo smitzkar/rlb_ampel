@@ -23,6 +23,7 @@ Important note for future me (or others reading this):
 >> sta_if = network.WLAN(network.STA_IF) # sta_if for connecting with router
 >> ap_if = network.WLAN(network.AP_IF)   # ap_if for using the eps32's own access point
 
+below works for both ap and sta
 check if active: 
 >> sta_if.active() # sta_if.active(True) to activate
 
@@ -41,3 +42,15 @@ Open webrepl.html in browser, connect to ip address http://... (including the po
 enter password
 success!
 
+## to actually do stuff 
+
+### file system  
+>> import os
+>> os.listdir()
+>> os.mkdir('dir') 
+etc.
+
+accessing files works as usual via open(), close()
+(with webrepl, one can transfer files from laptop!)
+
+"There are two files that are treated specially by the ESP8266 when it starts up: boot.py and main.py. The boot.py script is executed first (if it exists) and then once it completes the main.py script is executed. You can create these files yourself and populate them with the code that you want to run when the device starts up."
