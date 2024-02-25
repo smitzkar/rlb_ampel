@@ -1,3 +1,16 @@
+file:///Users/smitzkat/VSCode/webrepl/webrepl.html#192.168.178.107:8266
+(let's see if this will work)
+
+2024-02-25 Hm...
+seems like boot.py is NOT run on boot
+I HAD CHANGED THE GOD DAMN PASSWORD AND FORGOT ABOUT IT!!!!! AAAARGH!!!!!
+
+it now connects to wifi on boot, but doesn't seem to run any code below 
+I DID IT!!! 
+The sta_if.connect(...) threw an error, which prevented the rest of the code from running. Put it in a try/except block and now it works! (noob mistake, but I should probably take a break/sleep)
+
+22:07 It works
+
 # rlb_ampel
 
 Holy heck. This took some work.
@@ -28,6 +41,7 @@ check if active:
 >> sta_if.active() # sta_if.active(True) to activate
 
 >> sta_if.connect('wifi_ssid','wifi_password')
+for some reason needs to be run twice, sometimes (throws an error)
 
 check ip adress:
 >> sta_if.ifconfig()
@@ -54,3 +68,6 @@ accessing files works as usual via open(), close()
 (with webrepl, one can transfer files from laptop!)
 
 "There are two files that are treated specially by the ESP8266 when it starts up: boot.py and main.py. The boot.py script is executed first (if it exists) and then once it completes the main.py script is executed. You can create these files yourself and populate them with the code that you want to run when the device starts up."
+
+### run .py
+exec(open('file.py').read())
