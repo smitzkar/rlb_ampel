@@ -1,7 +1,12 @@
 # main.py runs after boot.py finishes. It's the main program that runs on the ESP32
 # Currently, it blocks the main thread, so it's not ideal. I'll have to figure out how to run it in the background
 
-# Relies on variables set up in boot.py. Probably not ideal, but works for now. 
+import time
+from machine import Pin
+
+# Set up the LED (already done no boot, but I'll do it again for good measure)
+led = Pin(13, Pin.OUT)
+ 
 def main():
     hello_world()
 
@@ -22,25 +27,25 @@ def hello_world():
     # "hello world" in morse: .... . .-.. .-.. --- / .-- --- .-. .-.. -..
     
     # Morse code timings
-    dot = 0.1
-    dash = 0.3
-    space_letter = 0.3
-    space_word = 0.7
+    dot_duration = 0.1
+    dash_duration = 0.3
+    space_letter_duration = 0.3
+    space_word_duration = 0.7
 
     def dot():
         led.on()
-        time.sleep(dot)
+        time.sleep(dot_duration)
         led.off()
-        time.sleep(dot)
+        time.sleep(dot_duration)
     def dash():
         led.on()
-        time.sleep(dash)
+        time.sleep(dash_duration)
         led.off()
-        time.sleep(dot)
+        time.sleep(dot_duration)
     def space_letter():
-        time.sleep(space_letter-0.1) # -0.1 to account for the time.sleep(dot) at the end of dot() and dash()
+        time.sleep(space_letter_duration-0.1) # -0.1 to account for the time.sleep(dot) at the end of dot() and dash()
     def space_word():
-        time.sleep(space_word-0.1) # same as above
+        time.sleep(space_word_duration-0.1) # same as above
     
     def h():
         dot()
