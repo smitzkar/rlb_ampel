@@ -26,6 +26,8 @@ https://docs.micropython.org/en/latest/esp8266/tutorial/repl.html
 clone webrepl to machine and start it by opening webrepl.html  
 https://github.com/micropython/webrepl?tab=readme-ov-file 
 
+some more info: https://learn.adafruit.com/adafruit-esp32-feather-v2/micropython-setup
+
 
 Important note for future me (or others reading this):
 ### connect to the thing via 
@@ -65,7 +67,7 @@ success!
 etc.
 
 accessing files works as usual via open(), close()
-(with webrepl, one can transfer files from laptop!)
+(with webrepl, one can transfer files from laptop!) -> could also use thonny IDE
 
 "There are two files that are treated specially by the ESP8266 when it starts up: boot.py and main.py. The boot.py script is executed first (if it exists) and then once it completes the main.py script is executed. You can create these files yourself and populate them with the code that you want to run when the device starts up."
 
