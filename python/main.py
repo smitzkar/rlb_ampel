@@ -27,76 +27,35 @@ def hello_world():
     # "hello world" in morse: .... . .-.. .-.. --- / .-- --- .-. .-.. -..
     
     # Morse code timings
-    dot_duration = 0.1
-    dash_duration = 0.3
-    space_letter_duration = 0.3
-    space_word_duration = 0.7
+    factor = 2 # to make it easier to change the timings
+    dot_duration = 0.1 * factor
+    dash_duration = 0.3 * factor
+    space_letter_duration = 0.3 * factor
+    space_word_duration = 0.7 * factor
 
-    def dot():
+    def signal(length):
         led.on()
-        time.sleep(dot_duration)
+        time.sleep(length)
         led.off()
-        time.sleep(dot_duration)
-    def dash():
-        led.on()
-        time.sleep(dash_duration)
-        led.off()
-        time.sleep(dot_duration)
-    def space_letter():
-        time.sleep(space_letter_duration-0.1) # -0.1 to account for the time.sleep(dot) at the end of dot() and dash()
-    def space_word():
-        time.sleep(space_word_duration-0.1) # same as above
-    
-    def h():
-        dot()
-        dot()
-        dot()
-        dot()
-        space_letter()
-    def e():
-        dot()
-        space_letter()
-    def l():
-        dot()
-        dash()
-        dot()
-        dot()
-        space_letter()
-    def o():
-        dash()
-        dash()
-        dash()
-        space_letter()
-    def w():
-        dot()
-        dash()
-        dash()
-        space_word()
-    def r():
-        dot()
-        dash()
-        dot()
-        space_letter()
-    def d():
-        dash()
-        dot()
-        dot()
-        space_word()
-    
-    
+        time.sleep(dot_duration) # as per the standard, the space between signals is the length of a dot
+
+    # Turn off LED to properly show first signal
     led.off()
-    h()
-    e()
-    l()
-    l()
-    o()
-    space_word()
-    w()
-    o()
-    r()
-    l()
-    d()
-    space_word()
+    time.sleep(1) 
+    
+    # Morse from online generator, had to remove space around "/"
+    message = ".... . .-.. .-.. ---/.-- --- .-. .-.. -.." # "hello word"
+    for char in message:
+        if char == '.':
+            signal(dot_duration)
+        elif char == '-':
+            signal(dash_duration)
+        elif char == ' ':
+            time.sleep(space_letter_duration - dot_duration) # account for the dot duration already being part of the end of the signal
+        elif char == '/':
+            time.sleep(space_word_duration - dot_duration)
+        else:
+            print("Invalid character in morse code string: " + char)
 
     led.on()
 
