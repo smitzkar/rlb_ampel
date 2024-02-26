@@ -11,6 +11,12 @@ The sta_if.connect(...) threw an error, which prevented the rest of the code fro
 
 22:07 It works
 
+2024-02-26 
+messed around with led to display morse code "hello world"
+learned quite a bit on how to work with the thing, by doing this little exercise
+I think I'm comfortable with it, now
+next task: async O.o
+
 # rlb_ampel
 
 Holy heck. This took some work.
