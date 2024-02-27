@@ -30,7 +30,11 @@ def hello_world():
     time.sleep(1) 
     
     # Morse from online generator, had to remove spaces around "/". Alternatively, adjust the space_word_duration to just dot_duration: 0.3+0.1+0.3 = 0.7
-    message = ".... . .-.. .-.. ---/.-- --- .-. .-.. -.." # "hello word"
+    # message = ".... . .-.. .-.. ---/.-- --- .-. .-.. -.." # "hello word"
+
+    with open('morse.txt', 'r') as file:
+        message = file.read()
+
     for char in message:
         if char == '.':
             signal(dot_duration)
