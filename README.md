@@ -17,6 +17,20 @@ learned quite a bit on how to work with the thing, by doing this little exercise
 I think I'm comfortable with it, now
 next task: async O.o
 
+2024-02-07
+webserver.py is running 
+to switch between 3 blink programs, run: 
+% curl http://192.168.43.185/blink2 
+
+TIMER DOESN'T BLOCK THE REPL!!
+from machine import Timer
+
+def print_message(timer):
+    print("One second has passed")
+
+timer = Timer(-1)
+timer.init(period=1000, mode=Timer.PERIODIC, callback=print_message)
+
 # rlb_ampel
 
 Holy heck. This took some work.

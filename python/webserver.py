@@ -1,24 +1,7 @@
 from machine import Pin, Timer
-import network
 import socket
 
-# Set WLAN here
-ssid = "one_solutionolution"
-password = "Lady_pluS_45"
-
-# Connect to Wi-Fi
-wlan = network.WLAN(network.STA_IF)
-wlan.active(True)
-wlan.connect(ssid, password)
-
-while not wlan.isconnected():
-    sleep(1)
-    print("Connecting to WiFi...")
-
-print("IP Address: ", wlan.ifconfig()[0])
-
-# Initialize the LED_BUILTIN pin as an output
-led = Pin(2, Pin.OUT)  # 2 is typically the built-in LED for ESP32
+led = Pin(13, Pin.OUT)  
 
 # Define the blink functions
 def blink1(timer):
@@ -44,6 +27,8 @@ s = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
 s.bind(('', 80))
 s.listen(5)
 
+
+# To actually use this, send "curl http://192.168.43.185/blink2" from the command line
 while True:
     conn, addr = s.accept()
     request = conn.recv(1024)
@@ -58,6 +43,12 @@ while True:
     elif '/blink3' in request:
         timer.init(period=250, mode=Timer.ONE_SHOT, callback=blink3)
         response += 'Running blink3'
+    elif '/stop' in request:
+        response += 'Stopping server'
+        timer.deinit() # Stop the timer (otherwise it just keeps going? could I use the timer thingy then to run the display?!)
+        conn.send(response)
+        conn.close()
+        break
     else:
         response += 'Unknown command'
     conn.send(response)
