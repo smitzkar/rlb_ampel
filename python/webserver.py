@@ -17,7 +17,7 @@ def blink3(timer):
     timer.init(period=250, mode=Timer.ONE_SHOT, callback=blink3)
 
 # Initialize the timer
-timer = Timer(-1)
+timer = Timer(-1) # -1 is for virtual timer, can set to 0, 1, 2, or 3 for hardware timers
 
 # Start with blink1
 timer.init(period=1000, mode=Timer.ONE_SHOT, callback=blink1)
