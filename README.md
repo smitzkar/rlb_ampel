@@ -1,3 +1,60 @@
+# NOTES FOR SMITZKAR 
+(not a proper README, yet)
+
+
+## Update 2024-03-12  
+
+I guess I have to go back to Arduino, after all. The esp32 I have isn't supported by the RGBMatrix library. 
+
+There's OTA stuff for Arduino, so while I won't have the usability and flexibility of python and the webREPL, I'll be able to update the code without having to touch the Ampel. 
+https://lastminuteengineers.com/esp32-ota-web-updater-arduino-ide/ 
+
+
+
+## 2024-03-15 update I sent to Mh, Nh
+
+Hey ihr beiden,
+
+Ich hatte am Dienstag mein Ampel-Zoom-Meeting mit Sara und hier ist ein kleines Update/Ergebnis.
+
+Sie hatte versprochen/erwähnt/in Aussicht gestellt, dass sie uns einen Haufen Elektronik-Teile bringen würde, damit ich damit herumspielen und lernen kann, ohne direkt an der Ampel zu hantieren. Daraus wird jetzt leider nichts, weil es wohl im Labor der Uni zu Personalwechsel kam und sie jetzt auch schon wieder in Barcelona ist.
+Wir sind was Elektronik angeht also auf die Ampel selbst, einen extra Microcontroller und die Kamera beschränkt. Die Kamera ist damit erst einmal vom Tisch (die braucht extra Kabel und Krams), aber das war denke ich sowieso abzusehen.
+
+Auf dem 2. Microcontroller (im Prinzip ein extremst simpler Computer) habe ich in meiner Freizeit herumgespielt und hatte schon einen Plan, den ich jetzt aber verwerfen musste. Mein Ziel dabei war es die Ampel über eine komplett andere Sprache zu kontrollieren, mit der wir viel schneller neue (und mächtigere) Programme, Veränderungen, etc. aufspielen hätten können. Das ist ohne extra-Equipment mit dem ich zuhause experimentieren kann leider nicht realistisch.
+Ich habe Sara eine alternative Idee vorgestellt (eine Art alternatives Betriebssystem, welche aber die gleiche Sprache benutzt) und sie schien sehr optimistisch, dass meine Lösung funktionieren wird und hat mir ihre Hilfe angeboten, sollte ich irgendwo stecken bleiben. Ich habe es auf dem extra Microcontroller schon getestet und es funktioniert!
+
+Sie hat noch ein paar häufige Fehlerquellen und bekannte Eigenarten der Elektronik erklärt und ein paar Tipps gegeben, wie man damit am besten umgeht. Es scheint sehr viel trial and error zu sein, aber das bin ich gewohnt.
+
+Zuletzt haben wir dann noch zusammen überlegt, wie wir die Ampel am besten mit Freifunk verbinden (besonders bzgl. Sicherheit, damit da keiner Hakenkreuze drauf spielt). Das scheint relativ einfach zu sein.
+
+---
+
+Es wird also leider etwas schwieriger als erwartet, ich bin aber zuversichtlich, dass ich es trotzdem zum Laufen bringe.
+
+Einen wirklichen Zeitplan habe ich noch nicht, weil ich mich erst einmal auf den Audioguide fokussieren möchte.
+Offene Aufgaben:
+[ ] neues "Betriebssystem" auf Ampel-Microcontroller spielen (damit wir sie via wifi programmieren können)
+[ ] wifi und minimalen webserver einrichten (um zwischen verschiedenen Anzeigevarianten via smartphone zu wechseln oder das Ampel-timing manuell/automatisch zu resetten)
+[ ] ein paar Sensoren-Anzeigevarianten schreiben (fürs Erste: fake it!-> Lautstärke, Luftqualität, etc., ohne wirklichen Input von möglichen Sensoren, einfach statische Anzeige um zu zeigen, wie es aussehen könnte)
+[ ] sobald das mit Airly (oder etwas anderem fest steht), die Anzeige realisieren
+[ ] Ampel timing messen (wollte da jemand mal bei der Stadt fragen? Ich könnte auch mal schauen, von wo ich da Infos kriegen könnte.)
+[ ] die alternative Ampel-Anzeige schreiben
+[ ] Varianten vorstellen, feedback bekommen, anpassen
+
+Es wirkt erstmal wie sehr viel (und ist es auch), Vieles davon ist aber sehr spannend und ich bin motiviert es fertigzustellen. Falls es zeitlich doch zu knapp wird, kann ich etwas pragmatischer werden und mich auf die wesentlichen Dinge beschränken. Durch mein neues "Betriebsystem" sollten wir in der Lage sein an der Ampel auch nach dem Aufhängen zu arbeiten, bzw. die Anzeige anzupassen.
+
+
+So viel erstmal von mir.
+
+
+PS: Sara meinte, dass es sein könnte, dass das derzeitige Netzteil überfordert werden könnte (es ist wohl eigentlich etwas zu schwach für die zwei LED-Matrizen). Da bräuchten wir unter Umständen ein etwas Mächtigeres. Das sollte aber nicht viel kosten und ich werde erst einmal schauen, ob ich es mit dem Alten schaffe ohne die Anzeige zu sehr zu beschränken. Falls wir doch noch irgendwas mit der Kamera machen wollen, brauchen wir definitiv ein bisschen Equipment (Kabel, etc.). Eventuell könnte auch was an der Ampel-Verkabelung kaputt gehen, weil die Kabel dort auch relativ lavede sind. Da bewegen wir uns aber auch im ein- bis niedrigen zweistelligen Eurobereich.
+
+
+
+
+## Python Experimenting
+
+
 file:///Users/smitzkat/VSCode/webrepl/webrepl.html#192.168.178.107:8266
 (let's see if this will work)
 
