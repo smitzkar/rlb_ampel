@@ -22,7 +22,7 @@ std::string loginIndexStr =
 "<input type=submit onclick=check(this.form) class=btn value=Login></form>"
 "<script>"
 "function check(form) {"
-"if(form.userid.value=='admin' && form.pwd.value=='Rlb_Ampel<3')"
+"if(form.userid.value=='ampeladmin' && form.pwd.value=='Hey!Nicht!Schummeln!')"
 "{window.open('/serverIndex')}"
 "else"
 "{alert('Error Password or Username')}"
