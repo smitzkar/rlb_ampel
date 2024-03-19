@@ -14,7 +14,7 @@
 #include <WebServer.h> // needs to be here for this part: WebServer server(80);
 #include "webpages.h" // needs quotation marks if in same directory
 #include "connectToWifi.h"
-#include "setupServer.h"
+#include "serverSetup.h"
 
 
 
@@ -81,7 +81,7 @@ void setup() {
   pinMode(led,  OUTPUT);  // for blink test
   Serial.begin(115200);   // for debugging
   connectToWiFiAndSetupMDNS(ssid, password, host);   // initial connection to wifi and sets alternative IP -> http://"host".local
-  setupServer();          // this one starts the web server, which handles all the OTA stuff
+  serverSetup();          // this one starts the web server, which handles all the OTA stuff
 
   // starts the two tasks/loops that are always running on specific cores
   xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
