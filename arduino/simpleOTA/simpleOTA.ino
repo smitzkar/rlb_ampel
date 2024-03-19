@@ -83,6 +83,7 @@ void setup() {
   // for blink test
   pinMode(led,  OUTPUT);
 
+  // for debugging output over USB
   Serial.begin(115200);
 
   // initial connection to wifi and sets alternative IP -> http://"host".local
@@ -93,7 +94,7 @@ void setup() {
   else {
     Serial.println("Not connected to WiFi");
   }
-  // this one handles the OTA update stuff
+  // this one starts the web server, which handles all the OTA stuff
   setupServer();
 
   // starts the two tasks/loops that are always running on cores
