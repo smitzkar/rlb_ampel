@@ -3,6 +3,8 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 
+// note: WiFi.begin() is really smart. It's non-blocking AND terminates on its own. 
+// so... no need to write a complicated function to time and handle this...
 
 void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const char* host) {
   WiFi.begin(ssid, password);

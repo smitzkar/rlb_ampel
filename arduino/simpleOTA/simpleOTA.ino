@@ -37,37 +37,21 @@ int ledState = LOW;  // ledState used to set the LED (int LOW/HIGH is same as bo
 WebServer server(80);
 
 
+// TODO
+// adjust time to 10min, 1min (or whatever seems reasonable)
 void handleServer(void * parameter) {
 
   // used for millis() function which is like delay(), but doesn't block the thread
   unsigned long currentMillis = 0;
-
   unsigned long lastCheckTime = 0;
   const unsigned long checkInterval = 1 * 60*1000;     // 1 min
-
-  unsigned long lastReconnectAttemptTime = 0;
-  const unsigned long reconnectInterval = 1/10 * 60*1000;  // 1/10 min
 
   for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
     currentMillis = millis();
 
-    // Check WiFi connection every 10 minutes
+    // Check WiFi connection every checkInterval and attempt to reconnect 
     if (currentMillis - lastCheckTime >= checkInterval) {
-      if (WiFi.status() != WL_CONNECTED) {
-        digitalWrite(led, LOW); // Set LED off when not connected
-        Serial.println("Lost WiFi connection.");
-
-        // Try to reconnect until successful (while loop to run it once)
-        while (WiFi.status() != WL_CONNECTED) {
-          Serial.println("Attempting to reconnect...");
-          connectToWiFiAndSetupMDNS(ssid, password, host);
-          delay(reconnectInterval); // Wait 1 minute before next reconnection attempt
-        }
-      } 
-      else {
-        digitalWrite(led, HIGH); // Set LED on when connected
-      }
-
+      connectToWiFiAndSetupMDNS(ssid, password, host, led);
       lastCheckTime = currentMillis;
     }
 
