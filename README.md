@@ -2,12 +2,17 @@
 (not a proper README, yet)
 
 
+## Update 2024-03-19 platformIO
+
+
 ## Update 2024-03-12  
 
-I guess I have to go back to Arduino, after all. The esp32 I have isn't supported by the RGBMatrix library. 
+I guess I have to go back to Arduino/C++, after all. The esp32 I have isn't supported by the RGBMatrix library. Writing my own interface would be way too much effort and leave me without any support. I simply don't have the time for such a project (Sara mentioned this being Bachelor Thesis amount of work) and also lack the equipment to do the necessary experimenting. 
 
-There's OTA stuff for Arduino, so while I won't have the usability and flexibility of python and the webREPL, I'll be able to update the code without having to touch the Ampel. 
+There's OTA stuff for Arduino, so while I won't have the usability and flexibility of python and the webREPL, I'll still be able to update the code without having to touch the Ampel. 
 https://lastminuteengineers.com/esp32-ota-web-updater-arduino-ide/ 
+
+also wifimanager library for secure connection to Freifunk (shouldn't be too difficult to add some extra controls to the simple web interface -> ability to change display options, adjust/reset things, etc.)
 
 
 
@@ -52,7 +57,7 @@ PS: Sara meinte, dass es sein könnte, dass das derzeitige Netzteil überfordert
 
 
 
-## Python Experimenting
+## MicroPython (unfortunately no longer an option)
 
 
 file:///Users/smitzkat/VSCode/webrepl/webrepl.html#192.168.178.107:8266
