@@ -37,8 +37,7 @@ int ledState = LOW;  // ledState used to set the LED (int LOW/HIGH is same as bo
 WebServer server(80);
 
 
-// TODO
-// adjust time to 10min, 1min (or whatever seems reasonable)
+// TODO: adjust time to 10min, 1min (or whatever seems reasonable)
 void handleServer(void * parameter) {
 
   // used for millis() function which is like delay(), but doesn't block the thread
