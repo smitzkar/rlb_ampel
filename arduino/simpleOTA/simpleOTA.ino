@@ -19,7 +19,6 @@
 #include <WiFi.h>
 // #include <WiFiClient.h> // don't need this 
 #include <WebServer.h>
-#include <ESPmDNS.h>
 #include <Update.h>
 #include "webpages.h" // needs quotation marks if in same directory
 #include "connectToWifi.h"
@@ -45,7 +44,7 @@ void setup(void) {
   pinMode(led,  OUTPUT);
 
   Serial.begin(115200);
-
+  
   connectToWiFiAndSetupMDNS(ssid, password, host);
 
 
