@@ -75,6 +75,5 @@ std::string serverIndexStr =
 "});"
 "});"
 "</script>" + style;
-
 // convert to char* so that it can be used by the WebServer
 const char* serverIndex = serverIndexStr.c_str();
