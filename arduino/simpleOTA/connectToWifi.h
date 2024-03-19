@@ -3,10 +3,6 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 
-// note: WiFi.begin() is really smart. It's non-blocking AND terminates on its own. 
-// so... no need to write a complicated function to time and handle this...
-// it is possible to limit this endlessly trying to connect (WiFi.disconnect()), but this isn't some super optimised code, anyway, so might as well move on for now
-
 void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const char* host) {
   WiFi.begin(ssid, password);
   Serial.println("Connecting...");
@@ -15,6 +11,11 @@ void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const cha
     delay(500);
     Serial.print(".");
   }
+
+  // turn on led to indicate successful connection
+  const int led = 13;
+  digitalWrite(led, true);
+
   Serial.println("");
   Serial.print("Connected to ");
   Serial.println(ssid);
@@ -29,7 +30,4 @@ void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const cha
   }
   Serial.println("mDNS responder started: http//" + String(host) + ".local");
 
-  // turn on led to indicate successful connection
-  const int led = 13;
-  digitalWrite(led, true);
 }

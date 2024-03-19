@@ -16,7 +16,10 @@
 #include "connectToWifi.h"
 #include "setupServer.h"
 
+
+
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
+// maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
 const char* host = "esp32";
 const char* ssid = "Karl";
 const char* password = "Rlb_KsESP";
@@ -25,7 +28,7 @@ const char* password = "Rlb_KsESP";
 const unsigned long greenPhase = 120000;  // 2min
 const unsigned long redPhase = 30000;  // 30s
 
-const int led = 13; // ESP32 Pin to which onboard LED is connected
+const int led = 13;     // ESP32 Pin to which onboard LED is connected
 bool ledState = false;  // ledState used to set the LED (int LOW/HIGH is same as bool false/true for digitalWrite())
 
 WebServer server(80);
@@ -51,14 +54,16 @@ void handleServer(void * parameter) {
 // One core dedicated core should be enough
 void updateDisplay(void * parameter) {
   for (;;) {
-    // still needs a way to reset it daily -> Time / NTP
 
+    // I am proboably overthinking this again. No one cares if the sync is off by a few milliseconds or even seconds
+
+    unsigned long t1 = millis();
+    // housekeeping function -> reset the traffic light every day at 00:00? 
+    // still needs a way to reset it daily -> Time / NTP
     unsigned long housekeepingTime = millis() - t1;
 
     // if housekeepingTime is longer than greenPhase + redPhase, then ... (let's pretend this won't happen for now)
-    // -> maybe moving the server stuff to a separate core would be a good idea, after all!  
-
-    // if housekeepingTime is longer than greenPhase, skip greenPhase
+    // if housekeepingTime is longer than greenPhase, skip greenPhase and reduce redPhase by the time spent on housekeeping
     // else, run greenPhase for greenPhase - housekeepingTime
     unsigned long greenPhaseActual = 120000 - housekeepingTime;  // 2min - time spent on housekeeping
     
@@ -67,7 +72,7 @@ void updateDisplay(void * parameter) {
 
     // run phase 2 
 
-    delay(1); // do I need to accound for milliseconds?
+    delay(1); // do I need to accound for milliseconds? No! I'm overthinking again!
   }
 }
 
