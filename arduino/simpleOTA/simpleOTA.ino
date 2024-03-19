@@ -31,36 +31,68 @@ const char* password = "Rlb_KsESP";
 // variabls for blinking an LED with Millis
 const int led = 13; // ESP32 Pin to which onboard LED is connected
 unsigned long previousMillis = 0;  // will store last time LED was updated
-const long interval = 1000;  // interval at which to blink (milliseconds)
+const long interval = 500;  // interval at which to blink (milliseconds)
 int ledState = LOW;  // ledState used to set the LED
 
 WebServer server(80);
 
 
-void setup(void) {
+void handleServer(void * parameter) {
+  // used for millis() function which is like delay(), but doesn't block the thread
+  unsigned long lastCheckTime = 0;
+  const unsigned long checkInterval = 10 * 60 * 1000; // 10 minutes in milliseconds
 
+  for (;;) { // uses infinite loop to ensure that it runs forever -> same idea as void loop()
+
+    // Check WiFi connection every 10 minutes
+    unsigned long currentMillis = millis();
+    if (currentMillis - lastCheckTime >= checkInterval) {
+      // Check WiFi connection 
+      if (WiFi.status() != WL_CONNECTED) {
+        Serial.println("Lost WiFi connection. Attempting to reconnect...");
+        connectToWiFiAndSetupMDNS(ssid, password, host);
+      }
+      lastCheckTime = currentMillis;
+    }
+
+    // Handles all the http stuff -> OTA updates, etc. 
+    server.handleClient();
+    delay(1);
+  }
+}
+
+void updateDisplay(void * parameter) {
+  for (;;) {
+    // Update the display
+    // Blink test
+    unsigned long currentMillis = millis();
+    if (currentMillis - previousMillis >= interval) {
+      // save the last time you blinked the LED
+      previousMillis = currentMillis;
+      // if the LED is off turn it on and vice-versa:
+      ledState = not(ledState);
+      // set the LED with the ledState of the variable:
+      digitalWrite(led,  ledState);
+    }
+    delay(1);
+  }
+}
+
+void setup() {
   // for blink test
   pinMode(led,  OUTPUT);
 
   Serial.begin(115200);
 
+  // initial connection and setup 
   connectToWiFiAndSetupMDNS(ssid, password, host);
   setupServer();
+
+  xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
+  xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 }
 
-void loop(void) {
-  server.handleClient();
-  delay(1);
-
-  // for blink test 
-  // loop to blink without delay
-  unsigned long currentMillis = millis();
-  if (currentMillis - previousMillis >= interval) {
-  // save the last time you blinked the LED
-  previousMillis = currentMillis;
-  // if the LED is off turn it on and vice-versa:
-  ledState = not(ledState);
-  // set the LED with the ledState of the variable:
-  digitalWrite(led,  ledState);
-  }
+void loop() {
+  // No need to put anything here
+  // can still add things I want to play with
 }
