@@ -28,4 +28,8 @@ void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const cha
     }
   }
   Serial.println("mDNS responder started: http//" + String(host) + ".local");
+
+  // turn on led to indicate successful connection
+  const int led = 13;
+  digitalWrite(led, true);
 }
