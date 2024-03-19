@@ -43,10 +43,10 @@ void handleServer(void * parameter) {
   unsigned long currentMillis = 0;
 
   unsigned long lastCheckTime = 0;
-  const unsigned long checkInterval = 10 * 60 * 1000;     // 10 minutes in milliseconds
+  const unsigned long checkInterval = 1 * 60*1000;     // 1 min
 
   unsigned long lastReconnectAttemptTime = 0;
-  const unsigned long reconnectInterval = 1 * 60 * 1000;  // 1 minute in milliseconds
+  const unsigned long reconnectInterval = 1/10 * 60*1000;  // 1/10 min
 
   for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
     currentMillis = millis();
@@ -102,7 +102,7 @@ void setup() {
 
   Serial.begin(115200);
 
-  // initial connection and setup 
+  // initial connection to wifi and sets alternative IP -> http://"host".local
   connectToWiFiAndSetupMDNS(ssid, password, host);
   if(WiFi.status() == WL_CONNECTED) {
     digitalWrite(led, HIGH);
@@ -110,8 +110,10 @@ void setup() {
   else {
     Serial.println("Not connected to WiFi");
   }
+  // this one handles the OTA update stuff
   setupServer();
 
+  // starts the two tasks/loops that are always running on cores
   xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
   xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 }
