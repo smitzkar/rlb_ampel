@@ -26,33 +26,61 @@
 const char* host = "esp32";
 const char* ssid = "Karl";
 const char* password = "Rlb_KsESP";
+bool wifiConnected = false; // global variable to keep track of WiFi connection
 
 // for blink test
 // variabls for blinking an LED with Millis
 const int led = 13; // ESP32 Pin to which onboard LED is connected
 unsigned long previousMillis = 0;  // will store last time LED was updated
-const long interval = 500;  // interval at which to blink (milliseconds)
-int ledState = LOW;  // ledState used to set the LED
+const long blinkInterval = 500;  // interval at which to blink (milliseconds)
+int ledState = LOW;  // ledState used to set the LED (int LOW/HIGH is same as bool false/true for digitalWrite())
 
 WebServer server(80);
 
 
 void handleServer(void * parameter) {
-  // used for millis() function which is like delay(), but doesn't block the thread
-  unsigned long lastCheckTime = 0;
-  const unsigned long checkInterval = 10 * 60 * 1000; // 10 minutes in milliseconds
 
-  for (;;) { // uses infinite loop to ensure that it runs forever -> same idea as void loop()
+  // used for millis() function which is like delay(), but doesn't block the thread
+  unsigned long currentMillis = 0;
+  
+  unsigned long lastCheckTime = 0;
+  const unsigned long checkInterval = 10 * 60 * 1000;     // 10 minutes in milliseconds
+
+  unsigned long lastReconnectAttemptTime = 0;
+  const unsigned long reconnectInterval = 1 * 60 * 1000;  // 1 minute in milliseconds
+
+  // Variables for LED blinking
+  unsigned long lastBlinkTime = 0;
+  const unsigned long locaBlinkInterval = 100; // 100 ms
+  bool localLedState = false;
+
+  for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
+    currentMillis = millis();
 
     // Check WiFi connection every 10 minutes
-    unsigned long currentMillis = millis();
     if (currentMillis - lastCheckTime >= checkInterval) {
-      // Check WiFi connection 
       if (WiFi.status() != WL_CONNECTED) {
-        Serial.println("Lost WiFi connection. Attempting to reconnect...");
-        connectToWiFiAndSetupMDNS(ssid, password, host);
+        Serial.println("Lost WiFi connection.");
+        lastReconnectAttemptTime = currentMillis; // Update last reconnect attempt time
       }
       lastCheckTime = currentMillis;
+    }
+
+    // Try to reconnect every minute if not connected
+    if (WiFi.status() != WL_CONNECTED && currentMillis - lastReconnectAttemptTime >= reconnectInterval) {
+      Serial.println("Attempting to reconnect...");
+      connectToWiFiAndSetupMDNS(ssid, password, host);
+      lastReconnectAttemptTime = currentMillis;
+    }
+
+    // If not connected, blink the LED fast
+    if (WiFi.status() != WL_CONNECTED && currentMillis - lastBlinkTime >= locaBlinkInterval) {
+      localLedState = !localLedState; // Toggle LED state (to blink)
+      digitalWrite(led, localLedState); // Update LED
+      lastBlinkTime = currentMillis;
+    }
+    else if (WiFi.status() == WL_CONNECTED) {
+      digitalWrite(led, HIGH); // Set LED on when connected
     }
 
     // Handles all the http stuff -> OTA updates, etc. 
@@ -65,8 +93,9 @@ void updateDisplay(void * parameter) {
   for (;;) {
     // Update the display
     // Blink test
+    /*
     unsigned long currentMillis = millis();
-    if (currentMillis - previousMillis >= interval) {
+    if (currentMillis - previousMillis >= blinkInterval) {
       // save the last time you blinked the LED
       previousMillis = currentMillis;
       // if the LED is off turn it on and vice-versa:
@@ -74,6 +103,7 @@ void updateDisplay(void * parameter) {
       // set the LED with the ledState of the variable:
       digitalWrite(led,  ledState);
     }
+    */
     delay(1);
   }
 }
