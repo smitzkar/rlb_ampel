@@ -31,6 +31,47 @@ bool ledState = false;  // ledState used to set the LED (int LOW/HIGH is same as
 WebServer server(80);
 
 
+
+// Basically the housekeeping function
+// moved to separate core to ensure that even if the wifi function is stuck, the display will still update
+void handleServer(void * parameter) {
+  for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
+
+    if (WiFi.status() != WL_CONNECTED) {   // check if WiFi is still connected, attempt to reconnect if so
+      digitalWrite(led, false);
+      connectToWiFiAndSetupMDNS(ssid, password, host);
+    }
+    server.handleClient();
+    delay(1);
+  }
+}
+
+
+// The actual display update function
+// One core dedicated core should be enough
+void updateDisplay(void * parameter) {
+  for (;;) {
+    // still needs a way to reset it daily -> Time / NTP
+
+    unsigned long housekeepingTime = millis() - t1;
+
+    // if housekeepingTime is longer than greenPhase + redPhase, then ... (let's pretend this won't happen for now)
+    // -> maybe moving the server stuff to a separate core would be a good idea, after all!  
+
+    // if housekeepingTime is longer than greenPhase, skip greenPhase
+    // else, run greenPhase for greenPhase - housekeepingTime
+    unsigned long greenPhaseActual = 120000 - housekeepingTime;  // 2min - time spent on housekeeping
+    
+
+    // run phase 1 
+
+    // run phase 2 
+
+    delay(1); // do I need to accound for milliseconds?
+  }
+}
+
+
 void setup() {
   pinMode(led,  OUTPUT);  // for blink test
   Serial.begin(115200);   // for debugging
@@ -38,40 +79,12 @@ void setup() {
   setupServer();          // this one starts the web server, which handles all the OTA stuff
 
   // starts the two tasks/loops that are always running on specific cores
-  // xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
-  // xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
+  xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
+  xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 }
 
 
-// new plan
-// instead of all the fancy overthought and overengineered stuff, just put it all in one loop 
 void loop() {
-
-  Serial.println("loop");
-
-  // still needs a way to reset it daily -> Time / NTP
-
-  unsigned long t1 = millis();
-
-  // do housekeeping here
-  if (WiFi.status() != WL_CONNECTED) {   // check if WiFi is still connected, attempt to reconnect if so
-    digitalWrite(led, false);
-    connectToWiFiAndSetupMDNS(ssid, password, host);
-  }
-  server.handleClient();   // check if something from server is requested
-  // add whatever else needs to be checked here
-
-  unsigned long houseKeepingTime = millis() - t1;
-
-  // green phase, let's say 2min 
-  unsigned long greenPhaseActual = 120000 - houseKeepingTime;  // 2min - time spent on housekeeping
-
-  //Serial.println(greenPhaseActual);
-  
-
-  // run phase 1 
-
-  // run phase 2 
-
-  delay(1); // do I need to accound for milliseconds?
+  // can put stuff in here 
+  // maybe remove the updateDisplay function and just put it in here
 }
