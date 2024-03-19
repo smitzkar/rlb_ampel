@@ -51,7 +51,7 @@ void handleServer(void * parameter) {
 
     // Check WiFi connection every checkInterval and attempt to reconnect 
     if (currentMillis - lastCheckTime >= checkInterval) {
-      connectToWiFiAndSetupMDNS(ssid, password, host, led);
+      connectToWiFiAndSetupMDNS(ssid, password, host);
       lastCheckTime = currentMillis;
     }
 
