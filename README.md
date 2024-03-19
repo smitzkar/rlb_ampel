@@ -2,7 +2,11 @@
 (not a proper README, yet)
 
 
-## Update 2024-03-19 platformIO
+## Update 2024-03-19  
+
+OTA Webupdater is live, as is the connection and stuff  
+-> rlb_ampel/arduino/simpleOTA
+
 
 
 ## Update 2024-03-12  

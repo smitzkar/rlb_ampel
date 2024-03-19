@@ -5,6 +5,7 @@
 
 // note: WiFi.begin() is really smart. It's non-blocking AND terminates on its own. 
 // so... no need to write a complicated function to time and handle this...
+// it is possible to limit this endlessly trying to connect (WiFi.disconnect()), but this isn't some super optimised code, anyway, so might as well move on for now
 
 void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const char* host) {
   WiFi.begin(ssid, password);
