@@ -15,6 +15,7 @@
 #include "webpages.h" // needs quotation marks if in same directory
 #include "connectToWifi.h"
 #include "serverSetup.h"
+#include "urbanCompass.h"
 
 
 
