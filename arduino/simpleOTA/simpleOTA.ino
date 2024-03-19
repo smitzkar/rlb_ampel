@@ -17,12 +17,12 @@
 // arduinoIDE > sketch > export compiled binary
 
 #include <WiFi.h>
-// #include <WiFiClient.h> // don't need this 
-#include <WebServer.h>
-#include <Update.h>
+#include <WebServer.h> // needs to be here for this part: WebServer server(80);
 #include "webpages.h" // needs quotation marks if in same directory
 #include "connectToWifi.h"
+#include "setupServer.h"
 
+// I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
 const char* host = "esp32";
 const char* ssid = "Karl";
 const char* password = "Rlb_KsESP";
@@ -34,7 +34,6 @@ unsigned long previousMillis = 0;  // will store last time LED was updated
 const long interval = 1000;  // interval at which to blink (milliseconds)
 int ledState = LOW;  // ledState used to set the LED
 
-
 WebServer server(80);
 
 
@@ -44,45 +43,9 @@ void setup(void) {
   pinMode(led,  OUTPUT);
 
   Serial.begin(115200);
-  
+
   connectToWiFiAndSetupMDNS(ssid, password, host);
-
-
-  /*return index page which is stored in serverIndex */
-  server.on("/", HTTP_GET, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/html", loginIndex);
-  });
-  server.on("/serverIndex", HTTP_GET, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/html", serverIndex);
-  });
-  /*handling uploading firmware file */
-  server.on("/update", HTTP_POST, []() {
-    server.sendHeader("Connection", "close");
-    server.send(200, "text/plain", (Update.hasError()) ? "FAIL" : "OK");
-    ESP.restart();
-  }, []() {
-    HTTPUpload& upload = server.upload();
-    if (upload.status == UPLOAD_FILE_START) {
-      Serial.printf("Update: %s\n", upload.filename.c_str());
-      if (!Update.begin(UPDATE_SIZE_UNKNOWN)) { //start with max available size
-        Update.printError(Serial);
-      }
-    } else if (upload.status == UPLOAD_FILE_WRITE) {
-      /* flashing firmware to ESP*/
-      if (Update.write(upload.buf, upload.currentSize) != upload.currentSize) {
-        Update.printError(Serial);
-      }
-    } else if (upload.status == UPLOAD_FILE_END) {
-      if (Update.end(true)) { //true to set the size to the current progress
-        Serial.printf("Update Success: %u\nRebooting...\n", upload.totalSize);
-      } else {
-        Update.printError(Serial);
-      }
-    }
-  });
-  server.begin();
+  setupServer();
 }
 
 void loop(void) {

@@ -3,6 +3,7 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 
+
 void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const char* host) {
   WiFi.begin(ssid, password);
   Serial.println("Connecting...");
