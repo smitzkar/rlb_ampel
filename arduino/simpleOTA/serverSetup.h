@@ -94,6 +94,16 @@ void serverSetup() {
     });
     // end of my old addition code
 
+    // led control code
+    server.on("/ledOn", HTTP_GET, []() {
+      digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
+      server.send(200, "text/plain", "LED is ON");
+    });
+    server.on("/ledOff", HTTP_GET, []() {
+      digitalWrite(LED_BUILTIN, LOW); // Turn the LED off
+      server.send(200, "text/plain", "LED is OFF");
+    });
+
 
   server.begin();
 }

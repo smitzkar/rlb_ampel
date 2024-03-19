@@ -1,6 +1,24 @@
 # NOTES FOR SMITZKAR 
 (not a proper README, yet)
 
+## How to write webinterface code, then convert to C++ usable code? 
+
+apparently one simply converts it to string line by line  
+aint nobody got time fo that
+use R"rawliteral()
+
+std::string html = R"rawliteral(
+  // Paste your HTML here
+)";
+
+std::string css = R"rawliteral(
+  // Paste your CSS here
+)";
+
+std::string js = R"rawliteral(
+  // Paste your JavaScript here
+)";
+
 
 ## Update 2024-03-19  
 
