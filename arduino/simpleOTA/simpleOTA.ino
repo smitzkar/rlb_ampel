@@ -4,6 +4,8 @@
 // to actually start after upload, press the RESET button on esp32
 // remember to actually be on same network...
 
+// either access via IP or http://esp32.local/ (replace esp32 with whatever the host is set up as)
+
 // login for webserver in line: "if(form.userid.value=='admin' && form.pwd.value=='Rlb_Ampel<3')"
 // the password doesn't actually do any sort of login, it just leads to ../serverIndex page
 
@@ -15,13 +17,14 @@
 // arduinoIDE > sketch > export compiled binary
 
 #include <WiFi.h>
-#include <WiFiClient.h>
+// #include <WiFiClient.h> // don't need this 
 #include <WebServer.h>
 #include <ESPmDNS.h>
 #include <Update.h>
 #include "webpages.h" // needs quotation marks if in same directory
+#include "connectToWifi.h"
 
-const char* host = "esp32-2";
+const char* host = "esp32";
 const char* ssid = "Karl";
 const char* password = "Rlb_KsESP";
 
@@ -36,7 +39,6 @@ int ledState = LOW;  // ledState used to set the LED
 WebServer server(80);
 
 
-/* setup function */
 void setup(void) {
 
   // for blink test
@@ -44,29 +46,9 @@ void setup(void) {
 
   Serial.begin(115200);
 
-  // Connect to WiFi network
-  WiFi.begin(ssid, password);
-  Serial.println("Connecting...");
+  connectToWiFiAndSetupMDNS(ssid, password, host);
 
-  // Wait for connection
-  while (WiFi.status() != WL_CONNECTED) {
-    delay(500);
-    Serial.print(".");
-  }
-  Serial.println("");
-  Serial.print("Connected to ");
-  Serial.println(ssid);
-  Serial.print("IP address: ");
-  Serial.println(WiFi.localIP());
 
-  /*use mdns for host name resolution*/
-  if (!MDNS.begin(host)) { //http://esp32.local
-    Serial.println("Error setting up MDNS responder!");
-    while (1) {
-      delay(1000);
-    }
-  }
-  Serial.println("mDNS responder started");
   /*return index page which is stored in serverIndex */
   server.on("/", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
