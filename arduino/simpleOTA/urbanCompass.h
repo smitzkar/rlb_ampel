@@ -70,6 +70,7 @@ void urbanCompassSetup() {
 void urbanCompassLoop() {
 
   //draw bike pictogram
+  // does this need to be called on every iteration? Doesn't really update anything
   dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
 
   size_t rows = 73; // number of rows

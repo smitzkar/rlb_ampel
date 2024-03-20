@@ -29,6 +29,7 @@ const char* password = "Rlb_KsESP";
 const unsigned long greenPhase = 120000;  // 2min
 const unsigned long redPhase = 30000;  // 30s
 
+// built-in LED on the other one is power only
 const int led = 13;     // ESP32 Pin to which onboard LED is connected
 bool ledState = false;  // ledState used to set the LED (int LOW/HIGH is same as bool false/true for digitalWrite())
 
@@ -99,10 +100,11 @@ void setup() {
 
   urbanCompassSetup();    // starts the display
 
+  // DO NOT USE THIS with the LED Matrix! -> half will be blue
   // temp moved here for troubleshooting
-  pinMode(led,  OUTPUT);  
-  digitalWrite(led, true);  
-  delay(1000);  
+  // pinMode(LED_BUILTIN,  OUTPUT);  
+  // digitalWrite(LED_BUILTIN, true);  
+  // delay(1000);  
   //digitalWrite(led, false);  
 
 }
