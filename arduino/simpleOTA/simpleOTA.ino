@@ -82,8 +82,14 @@ void updateDisplay(void * parameter) {
 
 
 void setup() {
-  pinMode(led,  OUTPUT);  // for blink test
-  Serial.begin(115200);   // for debugging
+  
+  // for troubleshooting
+  // pinMode(led,  OUTPUT);  
+  // digitalWrite(led, true);  
+  // delay(1000);  
+  // // digitalWrite(led, false);  
+  Serial.begin(115200);   // for output to serial monitor
+
   connectToWiFiAndSetupMDNS(ssid, password, host);   // initial connection to wifi and sets alternative IP -> http://"host".local
   serverSetup();          // this one starts the web server, which handles all the OTA stuff
 
@@ -92,6 +98,12 @@ void setup() {
   xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 
   urbanCompassSetup();    // starts the display
+
+  // temp moved here for troubleshooting
+  pinMode(led,  OUTPUT);  
+  digitalWrite(led, true);  
+  delay(1000);  
+  //digitalWrite(led, false);  
 
 }
 

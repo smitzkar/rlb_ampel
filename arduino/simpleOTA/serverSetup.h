@@ -93,13 +93,16 @@ void serverSetup() {
     // end of my old addition code
 
     // led control code
+    // pinMode(LED_BUILTIN,  OUTPUT);  // reinitiate again to see if this fixes the problem. Nope
     server.on("/ledOn", HTTP_GET, []() {
       digitalWrite(LED_BUILTIN, HIGH); // Turn the LED on
       server.send(200, "text/plain", "LED is ON");
+      Serial.println("LED turned ON");
     });
     server.on("/ledOff", HTTP_GET, []() {
       digitalWrite(LED_BUILTIN, LOW); // Turn the LED off
       server.send(200, "text/plain", "LED is OFF");
+      Serial.println("LED turned OFF");
     });
 
 
