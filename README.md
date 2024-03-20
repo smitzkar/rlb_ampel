@@ -1,6 +1,10 @@
 # NOTES FOR SMITZKAR 
 (not a proper README, yet)
 
+## hmpf
+
+apparently delay() on the esp32 wraps vTaskDelay(), so is nonblocking by default. Could have saved a lot of time knowing this. https://www.reddit.com/r/esp32/comments/poogbr/better_explanation_for_vtaskdelay_freertos/ 
+
 ## How to write webinterface code, then convert to C++ usable code? 
 
 apparently one simply converts it to string line by line  

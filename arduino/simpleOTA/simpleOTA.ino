@@ -10,6 +10,8 @@
 // to upload new sketch (remember to include OTA code):
 // arduinoIDE > sketch > export compiled binary
 
+// according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanation_for_vtaskdelay_freertos/ delay() on the esp32 actually wraps vTaskDelay. So... is nonblocking by default. 
+
 #include <WiFi.h>
 #include <WebServer.h> // needs to be here for this part: WebServer server(80);
 #include "webpages.h" // needs quotation marks if in same directory
@@ -29,9 +31,10 @@ const char* password = "Rlb_KsESP";
 const unsigned long greenPhase = 120000;  // 2min
 const unsigned long redPhase = 30000;  // 30s
 
+// WARNING: Do NOT use any sort of LED stuff for troubleshooting on the esp32 wired up to the Ampel!
 // built-in LED on the other one is power only
-const int led = 13;     // ESP32 Pin to which onboard LED is connected
-bool ledState = false;  // ledState used to set the LED (int LOW/HIGH is same as bool false/true for digitalWrite())
+// const int led = 13;     // ESP32 Pin to which onboard LED is connected
+// bool ledState = false;  // ledState used to set the LED (int LOW/HIGH is same as bool false/true for digitalWrite())
 
 WebServer server(80);
 
@@ -43,7 +46,7 @@ void handleServer(void * parameter) {
   for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
 
     if (WiFi.status() != WL_CONNECTED) {   // check if WiFi is still connected, attempt to reconnect if so
-      digitalWrite(led, false);
+      // digitalWrite(led, false);
       connectToWiFiAndSetupMDNS(ssid, password, host);
     }
     server.handleClient();

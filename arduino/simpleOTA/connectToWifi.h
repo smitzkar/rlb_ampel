@@ -1,5 +1,9 @@
 // connectToWiFi.h
 
+// TODO: for actual use 
+// figure out a way to limit WiFI.begin's runtime. Maybe let it try for a min, then wait 10min. 
+// It would needlessly block and eat up cpu time, when really, the wifi stuff isn't as critical as the display.
+
 #include <WiFi.h>
 #include <ESPmDNS.h>
 
@@ -12,9 +16,9 @@ void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const cha
     Serial.print(".");
   }
 
-  // turn on led to indicate successful connection
-  const int led = 13;
-  digitalWrite(led, true);
+  // turn on led to indicate successful connection (NOT FOR THE LED MATRIX ESP32!)
+  // const int led = 13;
+  // digitalWrite(led, true);
 
   Serial.println("");
   Serial.print("Connected to ");
