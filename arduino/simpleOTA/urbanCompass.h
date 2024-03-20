@@ -17,7 +17,7 @@
 #define B1_PIN 27
 #define R2_PIN 14
 #define G2_PIN 12
-#define B2_PIN 13
+#define B2_PIN 13 // what is this for??
 #define A_PIN 23
 #define B_PIN 19
 #define C_PIN 5
@@ -56,7 +56,7 @@ const uint8_t bike_vertical_mono[] PROGMEM = {
 void urbanCompassSetup() {
 
   // put your setup code here, to run once:
-  delay(1000); Serial.begin(115200); delay(200);
+  // delay(1000); Serial.begin(115200); delay(200); // what is this for??
 
 
   /************** DISPLAY **************/

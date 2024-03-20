@@ -1,5 +1,3 @@
-// server_setup.h
-
 #include <WebServer.h>
 #include <Update.h>
 
