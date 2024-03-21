@@ -58,20 +58,29 @@ void urbanCompassSetup() {
   // put your setup code here, to run once:
   // delay(1000); Serial.begin(115200); delay(200); // what is this for??
 
+  delay(2000); // to fix the display not starting properly
 
   /************** DISPLAY **************/
   Sprintln("...Starting Display");
   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
   dma_display->begin();
   dma_display->setBrightness8(255); //0-255
+
+  // add some delay to maybe give it time to properly initialise everything -> prevent faulty early display loops 
+  delay(2000);
+
+  // draw bike pictogram
+  // does this need to be called on every iteration? Doesn't really update anything
+  dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(220,220,220));
+
 }
 
 
 void urbanCompassLoop() {
 
-  //draw bike pictogram
-  // does this need to be called on every iteration? Doesn't really update anything
-  dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
+  // // draw bike pictogram
+  // // does this need to be called on every iteration? Doesn't really update anything
+  // dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
 
   size_t rows = 73; // number of rows
 
