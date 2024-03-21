@@ -1,6 +1,17 @@
 # NOTES FOR SMITZKAR 
 (not a proper README, yet)
 
+
+## bitmaps  
+
+I really thought that urbanCompass had implemented the functionality to display text and update it. 
+NOPE  
+they just painted the text in paint.net or similar and display the converted image...  
+
+So... I need to also write some code to take care of this if we actually want to display text and update it. 
+Do I have the hours for this? 
+
+
 ## hmpf
 
 apparently delay() on the esp32 wraps vTaskDelay(), so is nonblocking by default. Could have saved a lot of time knowing this. https://www.reddit.com/r/esp32/comments/poogbr/better_explanation_for_vtaskdelay_freertos/ 

@@ -18,6 +18,8 @@
 #include "connectToWifi.h"
 #include "serverSetup.h"
 #include "urbanCompass.h"
+#include "bitmaps.h"        // various preconfigured bitmaps
+#include "iterateBitmaps.h" // functions to iterate over bitmaps
 
 
 
@@ -77,7 +79,10 @@ void updateDisplay(void * parameter) {
 
     // run phase 2 
 
-    urbanCompassLoop();  // this is the actual display update function
+
+    // only use one of these two functions for now!  
+    urbanCompassLoop();  // this is the actual display update function for the red/green 
+    // iterateBitmapsLoop() // this is the actual display update function for the bitmaps
 
 
     delay(1); // do I need to accound for milliseconds? No! I'm overthinking again!
@@ -101,7 +106,10 @@ void setup() {
   xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
   xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 
+  // only use one of these two functions for now!
   urbanCompassSetup();    // starts the display
+  // iterateBitmapsSetup();  // starts the display
+
 
   // DO NOT USE THIS with the LED Matrix! -> half will be blue
   // temp moved here for troubleshooting
