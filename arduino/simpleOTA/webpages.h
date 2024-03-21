@@ -68,7 +68,7 @@ std::string loginIndexStr = R"(
 </form>
 <script>
   function check(form) {
-    if (form.userid.value=='ampeladmin' && form.pwd.value=='Hey!Nicht!Schummeln!') {
+    if (form.userid.value=='admin' && form.pwd.value=='admin') {
       window.open('/serverIndex');
     } else {
       alert('Error Password or Username');
