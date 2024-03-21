@@ -2,7 +2,7 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <Adafruit_GFX.h>
 
-#include <bitmaps.h> /* Bitmaps */
+#include "bitmaps.h" /* Bitmaps */
 
 /*--------------------- DEBUG  -------------------------*/
 #define Sprintln(a) (Serial.println(a))

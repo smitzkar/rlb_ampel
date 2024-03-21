@@ -18,8 +18,8 @@
 #include "connectToWifi.h"
 #include "serverSetup.h"
 #include "urbanCompass.h"
-#include "bitmaps.h"        // various preconfigured bitmaps
-#include "iterateBitmaps.h" // functions to iterate over bitmaps
+// #include "bitmaps.h"        // various preconfigured bitmaps
+// #include "iterateBitmaps.h" // functions to iterate over bitmaps
 
 
 
@@ -59,35 +59,35 @@ void handleServer(void * parameter) {
 
 // The actual display update function
 // One core dedicated core should be enough
-void updateDisplay(void * parameter) {
-  for (;;) {
+// void updateDisplay(void * parameter) {
+//   for (;;) {
 
-    // I am proboably overthinking this again. No one cares if the sync is off by a few milliseconds or even seconds
+//     // I am proboably overthinking this again. No one cares if the sync is off by a few milliseconds or even seconds
 
-    // unsigned long t1 = millis();
-    // // housekeeping function -> reset the traffic light every day at 00:00? 
-    // // still needs a way to reset it daily -> Time / NTP
-    // unsigned long housekeepingTime = millis() - t1;
+//     // unsigned long t1 = millis();
+//     // // housekeeping function -> reset the traffic light every day at 00:00? 
+//     // // still needs a way to reset it daily -> Time / NTP
+//     // unsigned long housekeepingTime = millis() - t1;
 
-    // // if housekeepingTime is longer than greenPhase + redPhase, then ... (let's pretend this won't happen for now)
-    // // if housekeepingTime is longer than greenPhase, skip greenPhase and reduce redPhase by the time spent on housekeeping
-    // // else, run greenPhase for greenPhase - housekeepingTime
-    // unsigned long greenPhaseActual = 120000 - housekeepingTime;  // 2min - time spent on housekeeping
+//     // // if housekeepingTime is longer than greenPhase + redPhase, then ... (let's pretend this won't happen for now)
+//     // // if housekeepingTime is longer than greenPhase, skip greenPhase and reduce redPhase by the time spent on housekeeping
+//     // // else, run greenPhase for greenPhase - housekeepingTime
+//     // unsigned long greenPhaseActual = 120000 - housekeepingTime;  // 2min - time spent on housekeeping
     
 
-    // run phase 1 
+//     // run phase 1 
 
-    // run phase 2 
-
-
-    // only use one of these two functions for now!  
-    urbanCompassLoop();  // this is the actual display update function for the red/green 
-    // iterateBitmapsLoop() // this is the actual display update function for the bitmaps
+//     // run phase 2 
 
 
-    delay(1); // do I need to accound for milliseconds? No! I'm overthinking again!
-  }
-}
+//     // only use one of these two functions for now!  
+//     // urbanCompassLoop();  // this is the actual display update function for the red/green 
+//     // iterateBitmapsLoop() // this is the actual display update function for the bitmaps
+
+
+//     delay(1); // do I need to accound for milliseconds? No! I'm overthinking again!
+//   }
+// }
 
 
 void setup() {
@@ -99,16 +99,25 @@ void setup() {
   // // digitalWrite(led, false);  
   Serial.begin(115200);   // for output to serial monitor
 
+  delay(2000); // added a bunch of delays to hopefully fix the display not starting properly
+
   connectToWiFiAndSetupMDNS(ssid, password, host);   // initial connection to wifi and sets alternative IP -> http://"host".local
+
+  delay(2000); 
+
   serverSetup();          // this one starts the web server, which handles all the OTA stuff
 
-  // starts the two tasks/loops that are always running on specific cores
-  xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
-  xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
+  delay(2000); 
 
   // only use one of these two functions for now!
   urbanCompassSetup();    // starts the display
   // iterateBitmapsSetup();  // starts the display
+
+  delay(2000); 
+
+  // starts the two tasks/loops that are always running on specific cores
+  xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
+  // xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 
 
   // DO NOT USE THIS with the LED Matrix! -> half will be blue
@@ -124,4 +133,8 @@ void setup() {
 void loop() {
   // can put stuff in here 
   // maybe remove the updateDisplay function and just put it in here
+
+// only use one of these two functions for now!  
+urbanCompassLoop();  // this is the actual display update function for the red/green 
+// iterateBitmapsLoop() // this is the actual display update function for the bitmaps
 }
