@@ -2,6 +2,19 @@
 (not a proper README, yet)
 
 
+# 2024-03-21 PLAN MOVING FORWARD  
+
+focus on MVP: show the Ampel display properly  
+-> create a proper, absolute timer function -> relying on actual time, not on clock speed  
+
+## Wishlist  
+- Airly -> pooping cars (with 3 levels)
+- a simple program to display new images -> maybe figure out how to upload images via web interface? 
+    - easy version: demand proper size of 32x96  
+    - advanced version: automatically convert given image
+
+
+
 ## bitmaps  
 
 I really thought that urbanCompass had implemented the functionality to display text and update it. 
