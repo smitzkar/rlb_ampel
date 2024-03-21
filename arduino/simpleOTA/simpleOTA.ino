@@ -134,7 +134,7 @@ void loop() {
   // can put stuff in here 
   // maybe remove the updateDisplay function and just put it in here
 
-// only use one of these two functions for now!  
-urbanCompassLoop();  // this is the actual display update function for the red/green 
-// iterateBitmapsLoop() // this is the actual display update function for the bitmaps
+  // only use one of these two functions for now!  
+  urbanCompassLoop();  // this is the actual display update function for the red/green 
+  // iterateBitmapsLoop() // this is the actual display update function for the bitmaps
 }
