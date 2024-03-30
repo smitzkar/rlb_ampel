@@ -98,12 +98,17 @@ void drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long durati
   for (size_t i = 0; i < rows; i++) //iterate over rows of rectangle
   {
     for (size_t color = 255; color > 0; color--) { // fade color from max to off
-        dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(r, g == 255 ? color : g, b == 255 ? color : b));
-        unsigned long elapsedTime = millis() - startTime;
-        unsigned long remainingTime = duration > elapsedTime ? duration - elapsedTime : 0;
-        unsigned long remainingSteps = (rows - i) * 255 + color;
-        unsigned long delayTime = remainingSteps > 0 ? remainingTime / remainingSteps : 0;
-        delay(delayTime);
+      // Check if the command to stop the display has been received. If so, clear the display and return.
+      if (stopDisplay) {
+        dma_display->fillScreen(0); 
+        return;
+      }
+      dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(r, g == 255 ? color : g, b == 255 ? color : b));
+      unsigned long elapsedTime = millis() - startTime;
+      unsigned long remainingTime = duration > elapsedTime ? duration - elapsedTime : 0;
+      unsigned long remainingSteps = (rows - i) * 255 + color;
+      unsigned long delayTime = remainingSteps > 0 ? remainingTime / remainingSteps : 0;
+      delay(delayTime);
     }
   }
 }
