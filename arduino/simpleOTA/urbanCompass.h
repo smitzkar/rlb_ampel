@@ -85,18 +85,25 @@ void urbanCompassLoop() {
 
   size_t rows = 73; // number of rows
 
-  drawAndFadeRectangle(0, 255, 0, rows); // for green
-  drawAndFadeRectangle(255, 0, 0, rows); // for red
+  drawAndFadeRectangle(0, 255, 0, rows, 180); // for green
+  drawAndFadeRectangle(255, 0, 0, rows, 120); // for red
 }
 
-
-void drawAndFadeRectangle(int a, int b, int c, size_t rows) {
-  dma_display->fillRect(56, 0, 73, 32, dma_display->color565(a, b, c)); //draw full rectangle
+// Call this with the RGB values and the number of rows to draw and fade.
+// The duration is the total time it should take to fade the rectangle (in seconds).
+void drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long duration) {
+  dma_display->fillRect(56, 0, 73, 32, dma_display->color565(r, g, b)); //draw full rectangle
+  unsigned long startTime = millis();
+  duration *= 1000; // convert to milliseconds
   for (size_t i = 0; i < rows; i++) //iterate over rows of rectangle
   {
     for (size_t color = 255; color > 0; color--) { // fade color from max to off
-        dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(a, b == 255 ? color : b, c == 255 ? color : c));
-        delay(1);
+        dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(r, g == 255 ? color : g, b == 255 ? color : b));
+        unsigned long elapsedTime = millis() - startTime;
+        unsigned long remainingTime = duration > elapsedTime ? duration - elapsedTime : 0;
+        unsigned long remainingSteps = (rows - i) * 255 + color;
+        unsigned long delayTime = remainingSteps > 0 ? remainingTime / remainingSteps : 0;
+        delay(delayTime);
     }
   }
 }
