@@ -1,16 +1,20 @@
-// to actually start after upload, press the RESET button on esp32
-// remember to actually be on same network...
+/* Temporary notes
 
-// either access via IP or http://esp32.local/ (replace esp32 with whatever the host is set up as)
+to actually start after upload, press the RESET button on esp32
+remember to actually be on same network...
 
-// login for webserver in line: "if(form.userid.value=='admin' && form.pwd.value=='Rlb_Ampel<3')"
-// the password doesn't actually do any sort of login, it just leads to ../serverIndex page
+either access via IP or http://esp32.local/ (replace esp32 with whatever the host is set up as)
 
-// must ALWAYS include the OTA code when uploading new sketch, because it overwrites everything, so if it's not uploaded again, there's no more OTA functionality
-// to upload new sketch (remember to include OTA code):
-// arduinoIDE > sketch > export compiled binary
+login for webserver in line: "if(form.userid.value=='admin' && form.pwd.value=='Rlb_Ampel<3')"
+the password doesn't actually do any sort of login, it just leads to ../serverIndex page
 
-// according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanation_for_vtaskdelay_freertos/ delay() on the esp32 actually wraps vTaskDelay. So... is nonblocking by default. 
+must ALWAYS include the OTA code when uploading new sketch, because it overwrites everything, so if it's not uploaded again, there's no more OTA functionality
+to upload new sketch (remember to include OTA code):
+arduinoIDE > sketch > export compiled binary
+
+according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanation_for_vtaskdelay_freertos/ delay() on the esp32 actually wraps vTaskDelay. So... is nonblocking by default. 
+
+*/
 
 #include <WiFi.h>
 #include <WebServer.h> // needs to be here for this part: WebServer server(80);
@@ -63,30 +67,20 @@ void handleServer(void * parameter) {
 // One core dedicated core should be enough
 // void updateDisplay(void * parameter) {
 //   for (;;) {
-
 //     // I am proboably overthinking this again. No one cares if the sync is off by a few milliseconds or even seconds
-
 //     // unsigned long t1 = millis();
 //     // // housekeeping function -> reset the traffic light every day at 00:00? 
 //     // // still needs a way to reset it daily -> Time / NTP
 //     // unsigned long housekeepingTime = millis() - t1;
-
 //     // // if housekeepingTime is longer than greenPhase + redPhase, then ... (let's pretend this won't happen for now)
 //     // // if housekeepingTime is longer than greenPhase, skip greenPhase and reduce redPhase by the time spent on housekeeping
 //     // // else, run greenPhase for greenPhase - housekeepingTime
 //     // unsigned long greenPhaseActual = 120000 - housekeepingTime;  // 2min - time spent on housekeeping
-    
-
-//     // run phase 1 
-
+//     // run phase 1
 //     // run phase 2 
-
-
 //     // only use one of these two functions for now!  
 //     // urbanCompassLoop();  // this is the actual display update function for the red/green 
 //     // iterateBitmapsLoop() // this is the actual display update function for the bitmaps
-
-
 //     delay(1); // do I need to accound for milliseconds? No! I'm overthinking again!
 //   }
 // }
@@ -94,11 +88,6 @@ void handleServer(void * parameter) {
 
 void setup() {
   
-  // for troubleshooting
-  // pinMode(led,  OUTPUT);  
-  // digitalWrite(led, true);  
-  // delay(1000);  
-  // // digitalWrite(led, false);  
   Serial.begin(115200);   // for output to serial monitor
 
   delay(2000); // added a bunch of delays to hopefully fix the display not starting properly
@@ -120,14 +109,6 @@ void setup() {
   // starts the two tasks/loops that are always running on specific cores
   xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
   // xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
-
-
-  // DO NOT USE THIS with the LED Matrix! -> half will be blue
-  // temp moved here for troubleshooting
-  // pinMode(LED_BUILTIN,  OUTPUT);  
-  // digitalWrite(LED_BUILTIN, true);  
-  // delay(1000);  
-  //digitalWrite(led, false);  
 
 }
 
