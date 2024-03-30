@@ -29,6 +29,8 @@ const char* host = "esp32";
 const char* ssid = "Karl";
 const char* password = "Rlb_KsESP";
 
+bool stopDisplay = false; // used to interupt the display loop 
+
 // adjust these according to the actual traffic light
 const unsigned long greenPhase = 120000;  // 2min
 const unsigned long redPhase = 30000;  // 30s

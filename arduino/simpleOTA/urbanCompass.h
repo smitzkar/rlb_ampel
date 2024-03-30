@@ -2,6 +2,9 @@
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <Adafruit_GFX.h>
 
+// Get this from main.ino (currently simpleOTA.ino)
+extern bool stopDisplay;
+
 
 /*--------------------- DEBUG  -------------------------*/
 #define Sprintln(a) (Serial.println(a))
@@ -84,7 +87,6 @@ void urbanCompassLoop() {
   // dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
 
   size_t rows = 73; // number of rows
-
   drawAndFadeRectangle(0, 255, 0, rows, 180); // for green
   drawAndFadeRectangle(255, 0, 0, rows, 120); // for red
 }
