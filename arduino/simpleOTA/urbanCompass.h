@@ -80,27 +80,23 @@ void urbanCompassLoop() {
 
   // // draw bike pictogram
   // // does this need to be called on every iteration? Doesn't really update anything
+  // // moved it out of here and to setup
   // dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
 
   size_t rows = 73; // number of rows
 
-  dma_display->fillRect(56, 0, 73, 32, dma_display->color565(0,255,0)); //draw full green rectangle
-  for (size_t i = 0; i < rows; i++)//iterrate over rows of rectangle
-  {
-    
-    for (size_t c = 255; c > 0; c--) { // fade color from max to off
-        dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(0,c,0));
-        delay(1);
-    };
-  };
+  drawAndFadeRectangle(0, 255, 0, rows); // for green
+  drawAndFadeRectangle(255, 0, 0, rows); // for red
+}
 
-  dma_display->fillRect(56, 0, 73, 32, dma_display->color565(255,0,0)); //draw full red rectangle
-  for (size_t i = 0; i < rows; i++) //iterrate over rows of rectangle
-  {
 
-    for (size_t c = 255; c > 0; c--) { // fade color from max to off
-        dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(c,0,0));
+void drawAndFadeRectangle(int a, int b, int c, size_t rows) {
+  dma_display->fillRect(56, 0, 73, 32, dma_display->color565(a, b, c)); //draw full rectangle
+  for (size_t i = 0; i < rows; i++) //iterate over rows of rectangle
+  {
+    for (size_t color = 255; color > 0; color--) { // fade color from max to off
+        dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(a, b == 255 ? color : b, c == 255 ? color : c));
         delay(1);
-    };
-  };  
+    }
+  }
 }
