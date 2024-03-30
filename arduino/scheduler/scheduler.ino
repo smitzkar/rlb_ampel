@@ -35,7 +35,7 @@ void setup()
 
   Serial.begin(115200);   // for output to serial monitor
 
-  // Configure NTP
+  // Configure NTP and sends first request for syncing the time (actually runs asynchronously in the background, handled by FreeRTOS?)
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
 
 
@@ -45,7 +45,7 @@ void setup()
 void loop()
 {
   time_t now;
-  time(&now); // Get the current time
+  time(&now); // Call the time function, which checks the current time and stores it in the variable now (we pass the address to the function, so it can both access and modify the variable). Is C stuff, just go with it for now :)
 
   // Update the time from the NTP server every 5 minutes (for testing purposes only!)
   if (localtime(&now)->tm_min % 5 == 0 && lastNtpUpdateMin != localtime(&now)->tm_min) {

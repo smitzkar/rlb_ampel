@@ -88,6 +88,7 @@ void urbanCompassLoop() {
 
   size_t rows = 73; // number of rows
   drawAndFadeRectangle(0, 255, 0, rows, 180); // for green
+  if (stopDisplay) continue; // break out of current iteration of loop (avoids calling the red function if the display is stopped)
   drawAndFadeRectangle(255, 0, 0, rows, 120); // for red
 }
 
@@ -100,6 +101,7 @@ void drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long durati
   for (size_t i = 0; i < rows; i++) //iterate over rows of rectangle
   {
     for (size_t color = 255; color > 0; color--) { // fade color from max to off
+
       // Check if the command to stop the display has been received. If so, clear the display and return.
       if (stopDisplay) {
         dma_display->fillScreen(0); 
