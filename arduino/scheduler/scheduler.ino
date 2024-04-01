@@ -63,7 +63,9 @@ void loop()
 
   }
 
-  // Made a mistake here... This works only for both blinkDurations being full minutes!
+  /* -!- WARNING -!- If using minutes, then it won't work properly. */
+  // Checks which mode to use based on the current second of the minute.
+  // It makes no sense for short intervals, but when it comes to longer intervals, it's nice to be able to immediately start, instead of having to wait for the start of the full cycle. 
   // the modulo solution was Copilot. I love it!
   const int combinedBlinkDuration = blinkDuration[0] + blinkDuration[1];
   if (localtime(&now)->tm_sec % combinedBlinkDuration < blinkDuration[0]) {
