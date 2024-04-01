@@ -63,9 +63,10 @@ void loop()
 
   }
 
+  // Made a mistake here... This works only for both blinkDurations being full minutes!
   // the modulo solution was Copilot. I love it!
-  const int totalBlink = blinkDuration[0] + blinkDuration[1];
-  if (localtime(&now)->tm_min % totalBlink < blinkDuration[0]) {
+  const int combinedBlinkDuration = blinkDuration[0] + blinkDuration[1];
+  if (localtime(&now)->tm_sec % combinedBlinkDuration < blinkDuration[0]) {
     blinkControl(blinkCount[0], blinkDuration[0]);
   } else {
     blinkControl(blinkCount[1], blinkDuration[1]); 
