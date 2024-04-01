@@ -16,11 +16,13 @@ bool stopBlinking = false; // used to interrupt the blinking loop
 
 // Haven't used arrays in a while, so...
 int blinkCount[] = {60, 20};        // Set the number of blinks for each mode (fast and slow)
-int blinkDuration[] = {30, 60};     // Set the duration (in seconds) for each mode (fast and slow)
-// at this pattern of 90s total, it'll run for 40 cycles per hour and restarts every hour
+int blinkDuration[] = {20, 40};     // Set the duration (in seconds) for each mode (fast and slow)
+// rethought length, so that a full cylce is now 1min 
 
 unsigned long lastBlinkTime = 0; // Keep track of the last time we blinked the LED
 
+int blinks = 0; // Keep track of the number of blinks
+int totalBlinks = 0; // Keep track of the total number of blinks
 
 void setup()
 {
@@ -55,6 +57,13 @@ void loop()
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     lastNtpUpdateMin = localtime(&now)->tm_min;
     Serial.println(ctime(&now)); // Print the current time to the serial monitor
+    Serial.println("Blinks during last 5min: ");
+    Serial.println(blinks); // Print the number of blinks during the last 5 minutes
+    totalBlinks += blinks; // Add the number of blinks to the total
+    blinks = 0; // Reset the number of blinks
+    Serial.println("Total blinks: ");
+    Serial.println(totalBlinks); // Print the total number of blinks
+
   }
 
   // the modulo solution was Copilot. I love it!
@@ -75,6 +84,12 @@ void blinkControl(int numberOfBlinks, unsigned long duration) {
 
   for (int i = 0; i < numberOfBlinks; i++) {
 
+    // Currently, it'll keep going until the number of blinks has been reached.
+    // Problem: it's supposed to stop after the duration has passed. Or more accurately, it should stop when it's time to stop! 
+    // Solutions: 
+    // b) check if there's enough time for another round of blinking. If not, stop the loop.
+    // would then need to have a "waiting" state, where it waits for the next interval to start blinking again, so it doesn't speed up, but stays in sync. 
+
     // Check if the command to stop the blinking has been received. If so, return.
     if (stopBlinking) {
       return;
@@ -84,5 +99,6 @@ void blinkControl(int numberOfBlinks, unsigned long duration) {
     delay(blinkInterval / 2); // Wait for half the interval
     digitalWrite(LED_PIN, LOW); // Turn the LED off
     delay(blinkInterval / 2); // Wait for the other half of the interval
+    blinks += 1;
   }
 }
