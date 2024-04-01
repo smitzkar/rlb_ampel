@@ -42,18 +42,6 @@ void setup()
   // Configure NTP and sends first request for syncing the time (actually runs asynchronously in the background, handled by FreeRTOS?)
   // will be 01.01.1970 01:00:00 on first Serial.println(ctime(&now)); (not worth the effort to fix this, as it's just a minor inconvenience. Fixes itself on first update.)
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-
-  // Create the high-priority task
-  xTaskCreatePinnedToCore(
-    checkTimeTask,   /* Function to implement the task */
-    "checkTime",     /* Name of the task */
-    10000,           /* Stack size in words */
-    NULL,            /* Task input parameter */
-    1,               /* Priority of the task */
-    NULL,            /* Task handle. */
-    0);              /* Core where the task should run */
-
-  // ...
 }
 
 void loop()
@@ -93,49 +81,15 @@ void blinkControl(int numberOfBlinks, unsigned long duration) {
 
   for (int i = 0; i < numberOfBlinks; i++) {
 
-    // Currently, it'll keep going until the number of blinks has been reached.
-    // Problem: it's supposed to stop after the duration has passed. Or more accurately, it should stop when it's time to stop! 
-    // Solutions: 
-    // b) check if there's enough time for another round of blinking. If not, stop the loop.
-    // would then need to have a "waiting" state, where it waits for the next interval to start blinking again, so it doesn't speed up, but stays in sync. 
-
     // Check if the command to stop the blinking has been received. If so, return.
     if (stopBlinking) {
       return;
     }
 
-    digitalWrite(LED_PIN, HIGH); // Turn the LED on
-    delay(blinkInterval / 2); // Wait for half the interval
-    digitalWrite(LED_PIN, LOW); // Turn the LED off
-    delay(blinkInterval / 2); // Wait for the other half of the interval
+    digitalWrite(LED_PIN, HIGH); 
+    delay(blinkInterval / 2); 
+    digitalWrite(LED_PIN, LOW); 
+    delay(blinkInterval / 2); 
     blinks += 1;
-  }
-}
-
-
-
-// A high-priority task that sleeps most of the time, but comes online every slightly less than 5min to check the time and control the stopBlinking variable. 
-void checkTimeTask(void * parameter) {
-  for(;;) { // Infinite loop
-    time_t now;
-    time(&now);
-    struct tm timeinfo;
-    localtime_r(&now, &timeinfo);
-
-    // Calculate the delay until the next xx:x4:59 or xx:x9:59
-    int delay_sec = 60 - timeinfo.tm_sec + (59 - (timeinfo.tm_min % 5)) * 60;
-    if (timeinfo.tm_min % 5 >= 4) {
-      delay_sec += 5 * 60; // Add 5 minutes if we're past the 4 minute mark
-    }
-
-    // Check if the current time is xx:x4:59 or xx:x9:59
-    if (delay_sec == 0) {
-      stopBlinking = true;
-      delay_sec = 5 * 60; // Wait for 5 minutes until the next xx:x4:59 or xx:x9:59
-    } else {
-      stopBlinking = false;
-    }
-
-    vTaskDelay(delay_sec * 1000 / portTICK_PERIOD_MS); // Delay for the calculated amount of time
   }
 }
