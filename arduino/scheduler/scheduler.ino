@@ -14,9 +14,13 @@ const int ntpUpdateInterval = 5; // Update the time from the NTP server every 5 
 
 bool stopBlinking = false; // used to interrupt the blinking loop
 
-// Haven't used arrays in a while, so...
-int blinkCount[] = {60, 20};        // Set the number of blinks for each mode (fast and slow)
-int blinkDuration[] = {20, 40};     // Set the duration (in seconds) for each mode (fast and slow)
+// Not using array, because C++ can't pass it to functions...
+// Could use an object, but that's overkill for this simple use case
+int fastBlinkCount = 40;
+int slowBlinkCount = 20;
+int fastBlinkDuration = 20; // in seconds
+int slowBlinkDuration = 40;
+
 // rethought length, so that a full cylce is now 1min 
 
 unsigned long lastBlinkTime = 0; // Keep track of the last time we blinked the LED
@@ -60,21 +64,21 @@ void loop()
     blinks = 0; // Reset the number of blinks
     Serial.println("Total blinks: ");
     Serial.println(totalBlinks); // Print the total number of blinks
-
   }
 
-  /* -!- WARNING -!- If using minutes, then it won't work properly. */
-  // Checks which mode to use based on the current second of the minute.
-  // It makes no sense for short intervals, but when it comes to longer intervals, it's nice to be able to immediately start, instead of having to wait for the start of the full cycle. 
-  // the modulo solution was Copilot. I love it!
-  const int combinedBlinkDuration = blinkDuration[0] + blinkDuration[1];
-  if (localtime(&now)->tm_sec % combinedBlinkDuration < blinkDuration[0]) {
-    blinkControl(blinkCount[0], blinkDuration[0]);
-  } else {
-    blinkControl(blinkCount[1], blinkDuration[1]); 
-  }
+  // Delay until just before the start of the next full minute, then start a fresh cycle of blinking
+  delayUntilNextMinute();
+  blinkCycle(fastBlinkCount, slowBlinkCount, fastBlinkDuration, slowBlinkDuration);
+  
 }
 
+
+void blinkCycle(int fastBlinkCount, int slowBlinkCount, int fastBlinkDuration, int slowBlinkDuration) {
+  // Blink the LED fast for fastBlinkDuration seconds
+  blinkControl(fastBlinkCount, fastBlinkDuration);
+  // Blink the LED slow for slowBlinkDuration seconds
+  blinkControl(slowBlinkCount, slowBlinkDuration);
+}
 
 
 void blinkControl(int numberOfBlinks, unsigned long duration) {
@@ -95,4 +99,18 @@ void blinkControl(int numberOfBlinks, unsigned long duration) {
     delay(blinkInterval / 2); 
     blinks += 1;
   }
+}
+
+
+void delayUntilNextMinute() {
+  time_t now;
+  time(&now);
+  struct tm* currentTime = localtime(&now);
+
+  // Calculate the remaining seconds and milliseconds in the current minute
+  int remainingSeconds = 59 - currentTime->tm_sec;
+  long remainingMillis = 1000 - (millis() % 1000);
+
+  // Delay for the remaining time
+  delay(remainingSeconds * 1000 + remainingMillis);
 }
