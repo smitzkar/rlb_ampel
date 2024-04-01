@@ -71,6 +71,8 @@ void loop()
 
   // Delay until just before the start of the next full minute, then start a fresh cycle of blinking
   delayUntilNextMinute();
+  Serial.println("Starting new cycle of blinking at ");
+  Serial.println(ctime(&now));
 
 
   blinkCycle(fastBlinkCount, slowBlinkCount, fastBlinkDuration, slowBlinkDuration);
@@ -88,12 +90,20 @@ void blinkCycle(int fastBlinkCount, int slowBlinkCount, int fastBlinkDuration, i
 }
 
 
+
+// Once again, I'm overthinking this... 
+// Simpler solution: 
+// 1) Start the loop with duration as desired
+// 2) run it like that for some interval (10min on first setup, then move to hourly)
+// 3) calculate an average actual runtime and adjust the duration accordingly 
+// (maybe store this adjustment somewhere FOR SCIENCE?)
+
 unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
   unsigned long startTime = millis();
   duration *= 1000; // convert to milliseconds
   unsigned long blinkInterval = duration / numberOfBlinks; // calculate the interval between each blink
 
-  // Splitting it up into two parts, so I can continually adjust the blink interval and avoid overflow, even if execution time is different than expected. Really, I only want this for the 2nd phase, but  
+  // Splitting it up into two parts, so I can continually adjust the blink interval and avoid overflow, even if execution time is different than expected. Really, I only want this for the 2nd phase, but it doesn't hurt to have it for the first phase as well and lets me use the same function for both phases.
   int a = 4 * numberOfBlinks / 5; // 80% of the blinks using integer division
   int b = numberOfBlinks - a; 
 
@@ -114,11 +124,11 @@ unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
 
   unsigned long endOfA = millis();
   unsigned long runtimeA = endOfA - startTime;
-  float factor = runtimeA / (endOfA - startTime);
-  // The factor checks how much faster or slower the execution was than expected, so that the remaining blinks can be adjusted, with the expectance that the execution time will be similar
-  blinkInterval = ((duration - runtimeA) / factor) / b; 
-  Serial.println("Factor:");
-  Serial.println(factor);
+  // float factor = runtimeA / (endOfA - startTime);
+  // // The factor checks how much faster or slower the execution was than expected, so that the remaining blinks can be adjusted, with the expectance that the execution time will be similar
+  // blinkInterval = ((duration - runtimeA) / factor) / b; 
+  // Serial.println("Factor:");
+  // Serial.println(factor);
 
   for (int i = 0; i < b; i++) {
     // Check if the command to stop the blinking has been received. If so, return.
@@ -146,4 +156,17 @@ void delayUntilNextMinute() {
 
   // Delay for the remaining time
   delay(remainingSeconds * 1000 + remainingMillis);
+}
+
+// Delays until specified time
+void delayUntil(int targetHour, int targetMinute) {
+  time_t now;
+  struct tm* currentTime;
+
+  do {
+    time(&now);
+    currentTime = localtime(&now);
+  } while(currentTime->tm_hour != targetHour || currentTime->tm_min != targetMinute);
+
+  // Execution will continue here at the target time
 }
