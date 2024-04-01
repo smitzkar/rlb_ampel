@@ -21,7 +21,7 @@ according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanat
 #include "webpages.h" // needs quotation marks if in same directory
 #include "connectToWifi.h"
 #include "serverSetup.h"
-#include "urbanCompass.h"
+#include "urbanKompass.h"
 // #include "bitmaps.h"        // various preconfigured bitmaps
 // #include "iterateBitmaps.h" // functions to iterate over bitmaps
 
@@ -58,7 +58,7 @@ void handleServer(void * parameter) {
       connectToWiFiAndSetupMDNS(ssid, password, host);
     }
     server.handleClient();
-    delay(1);
+    delay(1); // was thinking of replacing this with vTaskDelay(), but ESP32 already uses FreeRTOS, so it's the same thing
   }
 }
 

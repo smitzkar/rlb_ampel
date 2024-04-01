@@ -1,3 +1,8 @@
+/*
+Original code from urbanCompass: https://github.com/lucasoldenburg/urbancompass
+Renamed to urbanKompass.h, to show that Ks worked on it :)
+*/
+
 #include <Arduino.h>
 #include <ESP32-HUB75-MatrixPanel-I2S-DMA.h>
 #include <Adafruit_GFX.h>

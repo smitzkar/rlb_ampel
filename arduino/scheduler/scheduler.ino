@@ -1,5 +1,6 @@
 #include <WiFi.h>
 #include "time.h"
+//#include "timerKs.h"
 
 #define LED_PIN 13 // for the onboard LED
 
@@ -9,7 +10,7 @@ const char* ntpServer = "0.pool.ntp.org";
 const long  gmtOffset_sec = 3600;       // Offset for your timezone in seconds
 const int   daylightOffset_sec = 3600;  // Offset for daylight saving time in seconds
 
-int lastNtpUpdateMin = -1; // Initialised to an invalid value to force an update on the first loop iteration
+int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on the first loop iteration
 const int ntpUpdateInterval = 5; // Update the time from the NTP server every 5 minutes
 
 bool stopBlinking = false; // used to interrupt the blinking loop
@@ -54,9 +55,9 @@ void loop()
   time(&now); // Call the time function, which checks the current time and stores it in the variable now (we pass the address to the function, so it can both access and modify the variable). Is C stuff, just go with it for now :)
 
   // Update the time from the NTP server every ntpUpdateInterval minutes
-  if (localtime(&now)->tm_min % ntpUpdateInterval == 0 && lastNtpUpdateMin != localtime(&now)->tm_min) {
+  if (localtime(&now)->tm_min % ntpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_min) {
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    lastNtpUpdateMin = localtime(&now)->tm_min;
+    lastNtpUpdate = localtime(&now)->tm_min;
     Serial.println(ctime(&now)); // Print the current time to the serial monitor
     Serial.println("Blinks during last 5min: ");
     Serial.println(blinks); // Print the number of blinks during the last 5 minutes
@@ -68,6 +69,8 @@ void loop()
 
   // Delay until just before the start of the next full minute, then start a fresh cycle of blinking
   delayUntilNextMinute();
+
+
   blinkCycle(fastBlinkCount, slowBlinkCount, fastBlinkDuration, slowBlinkDuration);
   
 }
@@ -75,33 +78,55 @@ void loop()
 
 void blinkCycle(int fastBlinkCount, int slowBlinkCount, int fastBlinkDuration, int slowBlinkDuration) {
   // Blink the LED fast for fastBlinkDuration seconds
-  blinkControl(fastBlinkCount, fastBlinkDuration);
+  Serial.println("Fast blink actual runtime:");
+  Serial.println(blinkControl(fastBlinkCount, fastBlinkDuration));
   // Blink the LED slow for slowBlinkDuration seconds
-  blinkControl(slowBlinkCount, slowBlinkDuration);
+  Serial.println("Slow blink actual runtime:");
+  Serial.println(blinkControl(slowBlinkCount, slowBlinkDuration));
 }
 
 
-void blinkControl(int numberOfBlinks, unsigned long duration) {
+unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
   unsigned long startTime = millis();
   duration *= 1000; // convert to milliseconds
   unsigned long blinkInterval = duration / numberOfBlinks; // calculate the interval between each blink
 
-  for (int i = 0; i < numberOfBlinks; i++) {
+  // Splitting it up into two parts, so I can continually adjust the blink interval and avoid overflow, even if execution time is different than expected 
+  int a = 4 * numberOfBlinks / 5; // 80% of the blinks using integer division
+  int b = numberOfBlinks - a; 
 
+  // I could of course reduce the copy paste, but I'm too lazy to do that right now
+  for (int i = 0; i < a; i++) {
     // Check if the command to stop the blinking has been received. If so, return.
     if (stopBlinking) {
-      return;
+      return 1;
     }
-
     digitalWrite(LED_PIN, HIGH); 
     delay(blinkInterval / 2); 
     digitalWrite(LED_PIN, LOW); 
     delay(blinkInterval / 2); 
     blinks += 1;
   }
+
+  unsigned long endOfA = millis();
+  unsigned long runtimeA = endOfA - startTime;
+  blinkInterval = (duration - runtimeA) / b; // adjust the blink interval for the remaining blinks
+
+  for (int i = 0; i < b; i++) {
+    // Check if the command to stop the blinking has been received. If so, return.
+    if (stopBlinking) {
+      return 1;
+    }
+    digitalWrite(LED_PIN, HIGH); 
+    delay(blinkInterval / 2); 
+    digitalWrite(LED_PIN, LOW); 
+    delay(blinkInterval / 2); 
+    blinks += 1;
+  }
+  return millis() - startTime; // return the total runtime of the function
 }
 
-
+// Very simple function that does just that.
 void delayUntilNextMinute() {
   time_t now;
   time(&now);
