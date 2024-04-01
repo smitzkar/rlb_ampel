@@ -1,5 +1,7 @@
 #include <WiFi.h>
 #include "time.h"
+#include <cstdlib> // for rng
+#include <ctime> // for rng
 //#include "timerKs.h"
 
 #define LED_PIN 13 // for the onboard LED
@@ -91,7 +93,7 @@ unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
   duration *= 1000; // convert to milliseconds
   unsigned long blinkInterval = duration / numberOfBlinks; // calculate the interval between each blink
 
-  // Splitting it up into two parts, so I can continually adjust the blink interval and avoid overflow, even if execution time is different than expected 
+  // Splitting it up into two parts, so I can continually adjust the blink interval and avoid overflow, even if execution time is different than expected. Really, I only want this for the 2nd phase, but  
   int a = 4 * numberOfBlinks / 5; // 80% of the blinks using integer division
   int b = numberOfBlinks - a; 
 
@@ -108,9 +110,15 @@ unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
     blinks += 1;
   }
 
+  delay(rand() % 4000); // Random delay between the two phases 
+
   unsigned long endOfA = millis();
   unsigned long runtimeA = endOfA - startTime;
-  blinkInterval = (duration - runtimeA) / b; // adjust the blink interval for the remaining blinks
+  float factor = runtimeA / (endOfA - startTime);
+  // The factor checks how much faster or slower the execution was than expected, so that the remaining blinks can be adjusted, with the expectance that the execution time will be similar
+  blinkInterval = ((duration - runtimeA) / factor) / b; 
+  Serial.println("Factor:");
+  Serial.println(factor);
 
   for (int i = 0; i < b; i++) {
     // Check if the command to stop the blinking has been received. If so, return.
