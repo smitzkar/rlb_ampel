@@ -21,6 +21,7 @@ according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanat
 #include "webpages.h" // needs quotation marks if in same directory
 #include "connectToWifi.h"
 #include "serverSetup.h"
+#include "setupDisplay.h"
 #include "urbanKompass.h"
 #include "bitmaps.h"        // various preconfigured bitmaps
 #include "iterateBitmaps.h" // functions to iterate over bitmaps
@@ -76,29 +77,6 @@ void handleServer(void * parameter) {
 }
 
 
-// The actual display update function
-// One core dedicated core should be enough
-// void updateDisplay(void * parameter) {
-//   for (;;) {
-//     // I am proboably overthinking this again. No one cares if the sync is off by a few milliseconds or even seconds
-//     // unsigned long t1 = millis();
-//     // // housekeeping function -> reset the traffic light every day at 00:00? 
-//     // // still needs a way to reset it daily -> Time / NTP
-//     // unsigned long housekeepingTime = millis() - t1;
-//     // // if housekeepingTime is longer than greenPhase + redPhase, then ... (let's pretend this won't happen for now)
-//     // // if housekeepingTime is longer than greenPhase, skip greenPhase and reduce redPhase by the time spent on housekeeping
-//     // // else, run greenPhase for greenPhase - housekeepingTime
-//     // unsigned long greenPhaseActual = 120000 - housekeepingTime;  // 2min - time spent on housekeeping
-//     // run phase 1
-//     // run phase 2 
-//     // only use one of these two functions for now!  
-//     // urbanCompassLoop();  // this is the actual display update function for the red/green 
-//     // iterateBitmapsLoop() // this is the actual display update function for the bitmaps
-//     delay(1); // do I need to accound for milliseconds? No! I'm overthinking again!
-//   }
-// }
-
-
 void setup() {
   
   Serial.begin(115200);   // for output to serial monitor
@@ -109,22 +87,24 @@ void setup() {
 
   delay(2000); 
 
-  serverSetup();          // this one starts the web server, which handles all the OTA stuff
+  serverSetup();          // this one starts the web server task, which handles all the OTA stuff
 
   delay(2000); 
 
+
+
   // Hm... 
-  // This won't run if the choice is made during runtime. 
+  // This won't run if the choice is changed during runtime. 
   // Need to do some more finagling.
   switch (displayChoice) {
     case 1:
-      urbanCompassSetup();
+      urbanKompassSetup();
       break;
     case 2: 
       iterateBitmapsSetup();
       break;
     default:
-      Serial.println("Make a choice!")
+      Serial.println("Make a choice!");
   } 
 
   delay(2000); 
@@ -144,12 +124,12 @@ void loop() {
   // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
   switch (displayChoice) {
     case 1:
-      urbanCompassLoop();
+      urbanKompassLoop();
       break;
     case 2: 
       iterateBitmapsLoop();
       break;
     default:
-      Serial.println("Make a choice!")
+      Serial.println("Make a choice!");
   } 
 }
