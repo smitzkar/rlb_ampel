@@ -1,6 +1,6 @@
 // Contents: HTML code for the webpages
 // a bit of a mess, using std:string to handle easy concatenation, then conversion to char* for the WebServer
-
+// also has login and password in plain text xD (ToDO: maaybe change that before going live)
 
 #include <string>
 
@@ -126,3 +126,37 @@ std::string serverIndexStr = R"(
 </script>)" + style;
 // convert to char* so that it can be used by the WebServer
 const char* serverIndex = serverIndexStr.c_str();
+
+
+
+
+// my old addition code
+std::string additionStr = R"(
+<!-- Adjusted HTML and JavaScript -->
+<label for='num1'>Number 1:</label>
+<input type='text' id='num1' name='num1'><br><br>
+<label for='num2'>Number 2:</label>
+<input type='text' id='num2' name='num2'><br><br>
+<button onclick='sendNumbers()'>Send Numbers</button>
+<p>Sum: <span id='sum'>0</span></p>
+
+<script>
+function sendNumbers() {
+  var num1 = document.getElementById('num1').value;
+  var num2 = document.getElementById('num2').value;
+  
+  // Send a GET request to the ESP32
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/calculate?num1=' + num1 + '&num2=' + num2, true);
+  xhr.send();
+  
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      // Display the sum received from the ESP32
+      document.getElementById('sum').innerText = this.responseText;
+    }
+  };
+}
+</script>)" + style;
+// convert to char* so that it can be used by the WebServer
+const char* addition = additionStr.c_str();

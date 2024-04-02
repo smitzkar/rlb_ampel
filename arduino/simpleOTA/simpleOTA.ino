@@ -23,7 +23,7 @@ according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanat
 #include "serverSetup.h"
 #include "setupDisplay.h"
 #include "urbanKompass.h"
-#include "bitmaps.h"        // various preconfigured bitmaps
+#include "bitmaps.h"        // various preconfigured bitmaps (only include this once!)
 #include "iterateBitmaps.h" // functions to iterate over bitmaps
 
 /*
