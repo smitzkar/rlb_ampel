@@ -22,8 +22,8 @@ according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanat
 #include "connectToWifi.h"
 #include "serverSetup.h"
 #include "urbanKompass.h"
-// #include "bitmaps.h"        // various preconfigured bitmaps
-// #include "iterateBitmaps.h" // functions to iterate over bitmaps
+#include "bitmaps.h"        // various preconfigured bitmaps
+#include "iterateBitmaps.h" // functions to iterate over bitmaps
 
 /*
 Since I'm still struggling a bit with the FreeRTOS stuff: 
@@ -38,6 +38,15 @@ const char* ssid = "Karl";
 const char* password = "Rlb_KsESP";
 
 bool stopDisplay = false; // used to interupt the display loop 
+
+// set this manually for now, via web interface later
+// int because I'm lazy and it works  
+// 1 = red/green rectangles
+// 2 = red/green rectangles, but upside down
+// 3 = cycle bitmaps
+// 4 = ...
+// ...
+int displayChoice = 1; 
 
 // adjust these according to the actual traffic light
 const unsigned long greenPhase = 120000;  // 2min
@@ -104,9 +113,19 @@ void setup() {
 
   delay(2000); 
 
-  // only use one of these two functions for now!
-  urbanCompassSetup();    // starts the display
-  // iterateBitmapsSetup();  // starts the display
+  // Hm... 
+  // This won't run if the choice is made during runtime. 
+  // Need to do some more finagling.
+  switch (displayChoice) {
+    case 1:
+      urbanCompassSetup();
+      break;
+    case 2: 
+      iterateBitmapsSetup();
+      break;
+    default:
+      Serial.println("Make a choice!")
+  } 
 
   delay(2000); 
 
@@ -121,7 +140,16 @@ void loop() {
   // can put stuff in here 
   // maybe remove the updateDisplay function and just put it in here
 
-  // only use one of these two functions for now!  
-  urbanCompassLoop();  // this is the actual display update function for the red/green 
-  // iterateBitmapsLoop() // this is the actual display update function for the bitmaps
+  // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS
+  // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
+  switch (displayChoice) {
+    case 1:
+      urbanCompassLoop();
+      break;
+    case 2: 
+      iterateBitmapsLoop();
+      break;
+    default:
+      Serial.println("Make a choice!")
+  } 
 }
