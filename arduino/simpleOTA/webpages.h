@@ -69,7 +69,7 @@ std::string loginIndexStr = R"(
 <script>
   function check(form) {
     if (form.userid.value=='admin' && form.pwd.value=='admin') {
-      window.open('/ota');
+      window.open('/controlDisplay');
     } else {
       alert('Error Password or Username');
     }
