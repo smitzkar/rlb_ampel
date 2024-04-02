@@ -31,6 +31,14 @@ unsigned long lastBlinkTime = 0; // Keep track of the last time we blinked the L
 int blinks = 0; // Keep track of the number of blinks
 int totalBlinks = 0; // Keep track of the total number of blinks
 
+int tolerance = 3; // Tolerance for syncing to the start of the minute in seconds
+
+// For trial to start at specific time 
+bool startAtSpecificTime = false;
+int startHour = 0;
+int startMinute = 0;
+
+
 void setup()
 {
 
@@ -49,12 +57,20 @@ void setup()
   // Configure NTP and sends first request for syncing the time (actually runs asynchronously in the background, handled by FreeRTOS?)
   // will be 01.01.1970 01:00:00 on first Serial.println(ctime(&now)); (not worth the effort to fix this, as it's just a minor inconvenience. Fixes itself on first update.)
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  // Wait until time is updated (not the epoch time)
+  while (time(nullptr) <= 60 * 60 * 24) { // 60*60*24 is the number of seconds in a day
+    delay(1000); // wait for 1 second before trying again
+  }
 }
 
 void loop()
 {
   time_t now;
   time(&now); // Call the time function, which checks the current time and stores it in the variable now (we pass the address to the function, so it can both access and modify the variable). Is C stuff, just go with it for now :)
+
+  if (startAtSpecificTime) {
+    delayUntil(startHour, startMinute);
+  }
 
   // Update the time from the NTP server every ntpUpdateInterval minutes
   if (localtime(&now)->tm_min % ntpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_min) {
@@ -67,13 +83,13 @@ void loop()
     blinks = 0; // Reset the number of blinks
     Serial.println("Total blinks: ");
     Serial.println(totalBlinks); // Print the total number of blinks
+
+    syncToMinute(tolerance); // Delay until just before the start of the next full minute
   }
 
-  // Delay until just before the start of the next full minute, then start a fresh cycle of blinking
-  delayUntilNextMinute();
   Serial.println("Starting new cycle of blinking at ");
   Serial.println(ctime(&now));
-
+  
 
   blinkCycle(fastBlinkCount, slowBlinkCount, fastBlinkDuration, slowBlinkDuration);
   
@@ -99,8 +115,22 @@ void blinkCycle(int fastBlinkCount, int slowBlinkCount, int fastBlinkDuration, i
 // (maybe store this adjustment somewhere FOR SCIENCE?)
 
 unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
+
+  if (duration == fastBlinkDuration) {
+    int offset = syncToMinute(tolerance); // get the offset within tolerance to adjust to it here
+    Serial.print("Offset: ");
+    Serial.println(offset);
+    time_t now;
+    time(&now);
+    // Serial.println(ctime(&now));
+
+    duration = (duration - offset) * 1000; // account for offset (only for fast blink, as it's the first one)
+  }
+  else {
+    duration *= 1000; // convert to milliseconds
+  }
+
   unsigned long startTime = millis();
-  duration *= 1000; // convert to milliseconds
   unsigned long blinkInterval = duration / numberOfBlinks; // calculate the interval between each blink
 
   // Splitting it up into two parts, so I can continually adjust the blink interval and avoid overflow, even if execution time is different than expected. Really, I only want this for the 2nd phase, but it doesn't hurt to have it for the first phase as well and lets me use the same function for both phases.
@@ -120,15 +150,14 @@ unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
     blinks += 1;
   }
 
-  delay(rand() % 4000); // Random delay between the two phases 
+  // delay(rand() % 4000); // Random delay between the two phases 
 
   unsigned long endOfA = millis();
   unsigned long runtimeA = endOfA - startTime;
   // float factor = runtimeA / (endOfA - startTime);
   // // The factor checks how much faster or slower the execution was than expected, so that the remaining blinks can be adjusted, with the expectance that the execution time will be similar
   // blinkInterval = ((duration - runtimeA) / factor) / b; 
-  // Serial.println("Factor:");
-  // Serial.println(factor);
+  blinkInterval = (duration - runtimeA) / b; // Adjust the blink interval for the remaining blinks
 
   for (int i = 0; i < b; i++) {
     // Check if the command to stop the blinking has been received. If so, return.
@@ -144,18 +173,34 @@ unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
   return millis() - startTime; // return the total runtime of the function
 }
 
-// Very simple function that does just that.
-void delayUntilNextMinute() {
+// Checks current offset from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
+int syncToMinute(int tolerance) {
   time_t now;
   time(&now);
   struct tm* currentTime = localtime(&now);
+  int seconds = currentTime->tm_sec;
 
-  // Calculate the remaining seconds and milliseconds in the current minute
-  int remainingSeconds = 59 - currentTime->tm_sec;
-  long remainingMillis = 1000 - (millis() % 1000);
+  if (tolerance < seconds && seconds < (60 - tolerance)) {
+    // Calculate the remaining seconds and milliseconds in the current minute
+    int remainingSeconds = 59 - seconds;
+    long remainingMillis = 1000 - (millis() % 1000);
+    Serial.println("Syncing to minute");
+    Serial.println(remainingSeconds);
 
-  // Delay for the remaining time
-  delay(remainingSeconds * 1000 + remainingMillis);
+    // Delay for the remaining time
+    delay(remainingSeconds * 1000 + remainingMillis);
+    Serial.println("Synced to minute");
+    return 0;
+  }
+  // Could do this with ternary, but it's 2:55 am
+  else {
+    if (seconds <= 30){
+      return seconds;
+    }
+    else {
+      return 60 - seconds;
+    }
+  }
 }
 
 // Delays until specified time
@@ -168,5 +213,5 @@ void delayUntil(int targetHour, int targetMinute) {
     currentTime = localtime(&now);
   } while(currentTime->tm_hour != targetHour || currentTime->tm_min != targetMinute);
 
-  // Execution will continue here at the target time
+  // Execution will continue here at the target time (ur just use it to delay the loop)
 }

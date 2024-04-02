@@ -25,6 +25,10 @@ according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanat
 // #include "bitmaps.h"        // various preconfigured bitmaps
 // #include "iterateBitmaps.h" // functions to iterate over bitmaps
 
+/*
+Since I'm still struggling a bit with the FreeRTOS stuff: 
+> loop() as a Task: Treat loop() as a lower priority FreeRTOS task under the operating system's management.
+*/
 
 
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
