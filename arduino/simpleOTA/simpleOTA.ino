@@ -115,16 +115,19 @@ void loop() {
   // can put stuff in here 
   // maybe remove the updateDisplay function and just put it in here
 
+  Serial.println(displayChoice);
+  delay(5000);
+
   // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS
   // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
-  switch (displayChoice) {
-    case 1:
-      urbanKompassLoop();
-      break;
-    case 2: 
-      iterateBitmapsLoop();
-      break;
-    default:
-      Serial.println("Make a choice!");
-  } 
+  // switch (displayChoice) {
+  //   case 1:
+  //     urbanKompassLoop();
+  //     break;
+  //   case 2: 
+  //     iterateBitmapsLoop();
+  //     break;
+  //   default:
+  //     Serial.println("Make a choice!");
+  // } 
 }

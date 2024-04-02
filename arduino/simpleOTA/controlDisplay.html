@@ -11,7 +11,7 @@
 
 <div id="choice">
   <h1>Choose Display Option</h1>
-  <button id="btn1" onclick="updateDisplayChoice(1)">Grüne Welle</button>
+  <button id="btn1" onclick="updateDisplayChoice(1)">Gruene Welle</button>
   <button id="btn2" onclick="updateDisplayChoice(2)">Airly</button>
   <button id="btn3" onclick="updateDisplayChoice(3)">cycleImages</button>
 </div>
@@ -63,6 +63,7 @@ function fetchCurrentValues() {
   
   xhr.onreadystatechange = function() {
     if (this.readyState == 4 && this.status == 200) {
+      console.log('Response from server:', this.responseText);
       // Parse the response
       var currentValues = JSON.parse(this.responseText);
 
@@ -81,7 +82,7 @@ function fetchCurrentValues() {
       document.getElementById('btn' + currentValues.displayChoice).classList.add('active');
 
       // Hide the "parameters" div if the "Grüne Welle" button is not active
-      if (choice != 3) {
+      if (currentValues.displayChoice != 1) {
         document.getElementById('parameters').style.display = 'none';
       } else {
         // Show the "parameters" div if the "Grüne Welle" button is active

@@ -69,7 +69,7 @@ std::string loginIndexStr = R"(
 <script>
   function check(form) {
     if (form.userid.value=='admin' && form.pwd.value=='admin') {
-      window.open('/serverIndex');
+      window.open('/ota');
     } else {
       alert('Error Password or Username');
     }
@@ -78,6 +78,132 @@ std::string loginIndexStr = R"(
 )" + style;
 // convert to char* so that it can be used by the WebServer
 const char* loginIndex = loginIndexStr.c_str();
+
+
+/* Web Interace */
+std::string controlDisplayIndexStr = R"(
+  <!-- 
+  the simple Webinterface
+
+  Page to choose between display options, control the Ampel, etc. 
+  (no access to underlying code here, so safe to play with)
+-->
+
+<div id='choice'>
+  <h1>Choose Display Option</h1>
+  <button id='btn1' onclick='updateDisplayChoice(1)'>Gruene Welle</button>
+  <button id='btn2' onclick='updateDisplayChoice(2)'>Airly</button>
+  <button id='btn3' onclick='updateDisplayChoice(3)'>cycleImages</button>
+</div>
+
+<div id='parameters'>
+  <h2>Enter parameters for Ampel-Schaltung</h2>
+  <label for='phase1Length'>Phase 1 Length (in seconds):</label>
+  <input type='text' id='phase1Length' name='phase1Length'><br><br>
+  <label for='phase2Length'>Phase 2 Length (in seconds):</label>
+  <input type='text' id='phase2Length' name='phase2Length'><br><br>
+  <label for='ntpUpdateInterval'>NTP Update Interval (in minutes):</label>
+  <input type='text' id='ntpUpdateInterval' name='ntpUpdateInterval'><br><br>
+  <label for='tolerance'>Tolerance (in seconds, 0-20):</label>
+  <input type='text' id='tolerance' name='tolerance'><br><br>
+  <button onclick='sendParameters()'>Send Parameters</button><span id='response'></span>
+</div>
+
+
+<style>
+  .active {
+    border: 2px solid green;
+    background-color: lightgreen;
+  }
+</style>
+
+<script>
+
+// Function to send the display choice
+function updateDisplayChoice(choice) {
+  // Send a GET request to the server with the choice as a parameter
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/updateDisplayChoice?choice=' + choice, true);
+  xhr.send();
+  
+  // Remove the 'active' class from all buttons
+  document.getElementById('btn1').classList.remove('active');
+  document.getElementById('btn2').classList.remove('active');
+  document.getElementById('btn3').classList.remove('active');
+  
+  // Add the 'active' class to the clicked button
+  document.getElementById('btn' + choice).classList.add('active');
+}
+
+// Function to fetch the current values and pre-fill the input fields
+function fetchCurrentValues() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/getCurrentValues', true);
+  xhr.send();
+  
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log('Response from server:', this.responseText);
+      // Parse the response
+      var currentValues = JSON.parse(this.responseText);
+
+      // Pre-fill the input fields
+      document.getElementById('phase1Length').value = currentValues.phase1Length;
+      document.getElementById('phase2Length').value = currentValues.phase2Length;
+      document.getElementById('ntpUpdateInterval').value = currentValues.ntpUpdateInterval;
+      document.getElementById('tolerance').value = currentValues.tolerance;
+
+      // Remove the 'active' class from all buttons
+      document.getElementById('btn1').classList.remove('active');
+      document.getElementById('btn2').classList.remove('active');
+      document.getElementById('btn3').classList.remove('active');
+
+      // Add the 'active' class to the current choice button
+      document.getElementById('btn' + currentValues.displayChoice).classList.add('active');
+
+      // Hide the 'parameters' div if the 'Grüne Welle' button is not active
+      if (currentValues.displayChoice != 1) {
+        document.getElementById('parameters').style.display = 'none';
+      } else {
+        // Show the 'parameters' div if the 'Grüne Welle' button is active
+        document.getElementById('parameters').style.display = 'block';
+      }
+    }
+  };
+}
+// Call the function when the page loads
+window.onload = fetchCurrentValues;
+
+
+// Function to send the parameters for the Ampel-Schaltung 
+function sendParameters() {
+  // clear the response field
+  document.getElementById('response').innerHTML = '';
+
+  var phase1Length = document.getElementById('phase1Length').value;
+  var phase2Length = document.getElementById('phase2Length').value;
+  var ntpUpdateInterval = document.getElementById('ntpUpdateInterval').value;
+  var tolerance = document.getElementById('tolerance').value;
+  
+  // Send a GET request to the ESP32
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/updateParameters?phase1Length=' + phase1Length + '&phase2Length=' + phase2Length + '&ntpUpdateInterval=' + ntpUpdateInterval + '&tolerance=' + tolerance, true);
+  xhr.send();
+  
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      // Handle the response from the ESP32
+      console.log(this.responseText);
+      document.getElementById('response').innerHTML = this.responseText; 
+    }
+  };
+}
+</script>
+)" + style;
+// convert to char* so that it can be used by the WebServer
+const char* controlDisplayIndex = controlDisplayIndexStr.c_str();
+
+
  
 /* OTA update Page */
 std::string otaIndexStr = R"(

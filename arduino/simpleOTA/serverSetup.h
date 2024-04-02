@@ -16,6 +16,7 @@ extern int displayChoice;
 extern const char* loginIndex;
 extern const char* otaIndex;
 extern const char* additionIndex;
+extern const char* controlDisplayIndex;
 
 void serverSetup() {
 
