@@ -9,14 +9,14 @@
   (no access to underlying code here, so safe to play with)
 -->
 
-<div id="choice">
+<div id='choice'>
   <h1>Choose Display Option</h1>
-  <button id="btn1" onclick="updateDisplayChoice(1)">Gruene Welle</button>
-  <button id="btn2" onclick="updateDisplayChoice(2)">Airly</button>
-  <button id="btn3" onclick="updateDisplayChoice(3)">cycleImages</button>
+  <button id='btn1' onclick='updateDisplayChoice(1)'>Gruene Welle</button>
+  <button id='btn2' onclick='updateDisplayChoice(2)'>Airly</button>
+  <button id='btn3' onclick='updateDisplayChoice(3)'>cycleImages</button>
 </div>
 
-<div id="parameters">
+<div id='parameters'>
   <h2>Enter parameters for Ampel-Schaltung</h2>
   <label for='phase1Length'>Phase 1 Length (in seconds):</label>
   <input type='text' id='phase1Length' name='phase1Length'><br><br>
@@ -53,6 +53,9 @@ function updateDisplayChoice(choice) {
   
   // Add the 'active' class to the clicked button
   document.getElementById('btn' + choice).classList.add('active');
+
+  // Update the display of the 'parameters' div
+  updateParametersDisplay(choice);
 }
 
 // Function to fetch the current values and pre-fill the input fields
@@ -81,18 +84,24 @@ function fetchCurrentValues() {
       // Add the 'active' class to the current choice button
       document.getElementById('btn' + currentValues.displayChoice).classList.add('active');
 
-      // Hide the "parameters" div if the "Grüne Welle" button is not active
-      if (currentValues.displayChoice != 1) {
-        document.getElementById('parameters').style.display = 'none';
-      } else {
-        // Show the "parameters" div if the "Grüne Welle" button is active
-        document.getElementById('parameters').style.display = 'block';
-      }
+      // Update the display of the 'parameters' div
+      updateParametersDisplay(currentValues.displayChoice);
     }
   };
 }
 // Call the function when the page loads
 window.onload = fetchCurrentValues;
+
+// Function to update the display of the 'parameters' div
+function updateParametersDisplay(choice) {
+  // Hide the 'parameters' div if the 'Grüne Welle' button is not active
+  if (choice != 1) {
+    document.getElementById('parameters').style.display = 'none';
+  } else {
+    // Show the 'parameters' div if the 'Grüne Welle' button is active
+    document.getElementById('parameters').style.display = 'block';
+  }
+}
 
 
 // Function to send the parameters for the Ampel-Schaltung 

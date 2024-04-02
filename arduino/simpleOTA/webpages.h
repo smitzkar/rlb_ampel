@@ -133,6 +133,9 @@ function updateDisplayChoice(choice) {
   
   // Add the 'active' class to the clicked button
   document.getElementById('btn' + choice).classList.add('active');
+
+  // Update the display of the 'parameters' div
+  updateParametersDisplay(choice);
 }
 
 // Function to fetch the current values and pre-fill the input fields
@@ -161,18 +164,24 @@ function fetchCurrentValues() {
       // Add the 'active' class to the current choice button
       document.getElementById('btn' + currentValues.displayChoice).classList.add('active');
 
-      // Hide the 'parameters' div if the 'Grüne Welle' button is not active
-      if (currentValues.displayChoice != 1) {
-        document.getElementById('parameters').style.display = 'none';
-      } else {
-        // Show the 'parameters' div if the 'Grüne Welle' button is active
-        document.getElementById('parameters').style.display = 'block';
-      }
+      // Update the display of the 'parameters' div
+      updateParametersDisplay(currentValues.displayChoice);
     }
   };
 }
 // Call the function when the page loads
 window.onload = fetchCurrentValues;
+
+// Function to update the display of the 'parameters' div
+function updateParametersDisplay(choice) {
+  // Hide the 'parameters' div if the 'Grüne Welle' button is not active
+  if (choice != 1) {
+    document.getElementById('parameters').style.display = 'none';
+  } else {
+    // Show the 'parameters' div if the 'Grüne Welle' button is active
+    document.getElementById('parameters').style.display = 'block';
+  }
+}
 
 
 // Function to send the parameters for the Ampel-Schaltung 
