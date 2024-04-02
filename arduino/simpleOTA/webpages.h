@@ -79,8 +79,8 @@ std::string loginIndexStr = R"(
 // convert to char* so that it can be used by the WebServer
 const char* loginIndex = loginIndexStr.c_str();
  
-/* Server Index Page */
-std::string serverIndexStr = R"(
+/* OTA update Page */
+std::string otaIndexStr = R"(
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 <form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>
   <input type='file' name='update' id='file' onchange='sub(this)' style=display:none>
@@ -117,6 +117,8 @@ std::string serverIndexStr = R"(
         return xhr;
       },
       success:function(d, s) {
+        $('#prg').html('Success!');
+        $('#bar').css('width', '100%');
         console.log('success!') 
       },
       error: function (a, b, c) {
@@ -125,13 +127,13 @@ std::string serverIndexStr = R"(
   });
 </script>)" + style;
 // convert to char* so that it can be used by the WebServer
-const char* serverIndex = serverIndexStr.c_str();
+const char* otaIndex = otaIndexStr.c_str();
 
 
 
 
 // my old addition code
-std::string additionStr = R"(
+std::string additionIndexStr = R"(
 <!-- Adjusted HTML and JavaScript -->
 <label for='num1'>Number 1:</label>
 <input type='text' id='num1' name='num1'><br><br>
@@ -159,4 +161,4 @@ function sendNumbers() {
 }
 </script>)" + style;
 // convert to char* so that it can be used by the WebServer
-const char* addition = additionStr.c_str();
+const char* additionIndex = additionIndexStr.c_str();

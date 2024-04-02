@@ -40,18 +40,13 @@ const char* password = "Rlb_KsESP";
 
 bool stopDisplay = false; // used to interupt the display loop 
 
-// set this manually for now, via web interface later
-// int because I'm lazy and it works  
-// 1 = red/green rectangles
-// 2 = red/green rectangles, but upside down
-// 3 = cycle bitmaps
-// 4 = ...
-// ...
-int displayChoice = 1; 
 
-// adjust these according to the actual traffic light
-const unsigned long greenPhase = 120000;  // 2min
-const unsigned long redPhase = 30000;  // 30s
+// adjust these according to the actual traffic light (or let the web interface do it)
+int globalPhase1Length = 45; // in seconds
+int globalPhase2Length = 75;
+int globalTolerance = 3;
+int globalNtpUpdateInterval = 5; // in minutes
+int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 
 
 // WARNING: Do NOT use any sort of LED stuff for troubleshooting on the esp32 wired up to the Ampel!
 // built-in LED on the other one is power only
