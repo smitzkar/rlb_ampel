@@ -47,6 +47,7 @@ int globalPhase2Length = 75;
 int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
 int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 
+bool animationDirection = false; // default is the original top down
 
 // WARNING: Do NOT use any sort of LED stuff for troubleshooting on the esp32 wired up to the Ampel!
 // built-in LED on the other one is power only

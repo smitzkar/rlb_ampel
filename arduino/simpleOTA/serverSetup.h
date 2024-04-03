@@ -9,6 +9,7 @@ extern int globalPhase1Length;
 extern int globalTolerance; 
 extern int globalNtpUpdateInterval; 
 extern int displayChoice;
+extern bool animationDirection;
 
 
 
@@ -41,7 +42,8 @@ void serverSetup() {
     json += "\"phase2Length\":" + String(globalPhase2Length) + ",";
     json += "\"ntpUpdateInterval\":" + String(globalNtpUpdateInterval) + ",";
     json += "\"tolerance\":" + String(globalTolerance) + ",";
-    json += "\"displayChoice\":" + String(displayChoice);
+    json += "\"displayChoice\":" + String(displayChoice) + ",";
+    json += "\"animationDirection\":" + String(animationDirection);
     json += "}";
 
     // Send the JSON object back to the browser
@@ -56,6 +58,16 @@ void serverSetup() {
     
     // Send a response back to the browser
     server.send(200, "text/plain", "Display choice updated successfully");
+  });
+    server.on("/updateDirection", HTTP_GET, []() {
+    // Get the choice from the request
+    String direction = server.arg("direction");
+    
+    // Update the global variable 
+    animationDirection = (direction == "true"); // this is a bit odd, but it basically checks if the string is "true" and then sets the variable to true, else false
+    
+    // Send a response back to the browser
+    server.send(200, "text/plain", "Animation direction updated successfully");
   });
   server.on("/updateParameters", HTTP_GET, []() {
     // Get the parameters from the request

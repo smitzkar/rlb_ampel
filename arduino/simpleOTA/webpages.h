@@ -82,7 +82,8 @@ const char* loginIndex = loginIndexStr.c_str();
 
 /* Web Interace */
 std::string controlDisplayIndexStr = R"(
-  <!-- 
+
+<!-- 
   the simple Webinterface
 
   Page to choose between display options, control the Ampel, etc. 
@@ -106,6 +107,11 @@ std::string controlDisplayIndexStr = R"(
   <input type='text' id='ntpUpdateInterval' name='ntpUpdateInterval'><br><br>
   <label for='tolerance'>Tolerance (in seconds, 0-20):</label>
   <input type='text' id='tolerance' name='tolerance'><br><br>
+
+  <label for='direction'>Direction (top down or bottom up)</label><br>
+  <button id='btnTopDown' onclick='updateDirection(false)'>Top Down</button>
+  <button id='btnBottomUp' onclick='updateDirection(true)'>Bottom Up</button><br><br>
+
   <button onclick='sendParameters()'>Send Parameters</button><span id='response'></span>
 </div>
 
@@ -130,13 +136,35 @@ function updateDisplayChoice(choice) {
   document.getElementById('btn1').classList.remove('active');
   document.getElementById('btn2').classList.remove('active');
   document.getElementById('btn3').classList.remove('active');
-  
+
   // Add the 'active' class to the clicked button
   document.getElementById('btn' + choice).classList.add('active');
 
   // Update the display of the 'parameters' div
   updateParametersDisplay(choice);
 }
+
+// Function to send the direction choice
+function updateDirection(direction) {
+  // Send a GET request to the server with the direction as a parameter
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/updateDirection?direction=' + direction, true);
+  xhr.send();
+  
+  // Remove the 'active' class from all buttons
+  document.getElementById('btnTopDown').classList.remove('active');
+  document.getElementById('btnBottomUp').classList.remove('active');
+
+  // Add the 'active' class to the clicked button
+  if (direction) {
+    document.getElementById('btnBottomUp').classList.add('active');
+  } else {
+    document.getElementById('btnTopDown').classList.add('active');
+  }
+}
+
+
+
 
 // Function to fetch the current values and pre-fill the input fields
 function fetchCurrentValues() {
@@ -160,9 +188,19 @@ function fetchCurrentValues() {
       document.getElementById('btn1').classList.remove('active');
       document.getElementById('btn2').classList.remove('active');
       document.getElementById('btn3').classList.remove('active');
+      document.getElementById('btnTopDown').classList.remove('active');
+      document.getElementById('btnBottomUp').classList.remove('active');
+  
 
       // Add the 'active' class to the current choice button
       document.getElementById('btn' + currentValues.displayChoice).classList.add('active');
+
+      // Add the 'active' class to the current direction button
+      if (currentValues.direction) {
+        document.getElementById('btnBottomUp').classList.add('active');
+      } else {
+        document.getElementById('btnTopDown').classList.add('active');
+      }
 
       // Update the display of the 'parameters' div
       updateParametersDisplay(currentValues.displayChoice);
