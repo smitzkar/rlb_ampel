@@ -67,27 +67,31 @@ const uint8_t bike_vertical_mono[] PROGMEM = {
 0x00, 0x10, 0x10, 0x00, 0x00, 0x08, 0x20, 0x00, 0x00, 0x07, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
-// New helper function to fade the rows from max brightness to off. 
-// The original code stepped by 1, but this seemed wasteful. I now step by 16, so fade over 16 iterations, saving 240 iteration every row. 
-void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long startTime, unsigned long duration) {
-  for (size_t brightness = 255; brightness > 0; brightness -= 16) { 
+// New helper function to fade the rows
+void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long startTime, unsigned long duration, int stepSize = 16) {
+  for (int brightness = 255; brightness > 0; brightness -= stepSize) { // fade color from max to off
 
     // Check if the command to stop the display has been received. If so, clear the display and return.
     if (stopDisplay) {
       dma_display->fillScreen(0); 
       return;
     }
+
+    // It's hideous, but I'll let the compiler handle it. Should probably modulo this. 
     int fadedR = (r * brightness) / 255;
+    if (fadedR < stepSize) fadedR = 0;
     int fadedG = (g * brightness) / 255;
+    if (fadedG < stepSize) fadedG = 0; 
     int fadedB = (b * brightness) / 255;
+    if (fadedB < stepSize) fadedB = 0;
     dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(fadedR, fadedG, fadedB));
 
-    // A bit of math to calculate the delay time for each iteration. 
+    // A bit of math to calculate the delay time for each step. 
     unsigned long elapsedTime = millis() - startTime;
     unsigned long remainingTime = duration > elapsedTime ? duration - elapsedTime : 0;
-    unsigned long completedBrightnessLevels = animationDirection ? (rows - i - 1) * 16 + (16 - brightness/16) : i * 16 + (16 - brightness/16);
-    unsigned long remainingBrightnessLevels = rows * 16 - completedBrightnessLevels;
-    unsigned long delayTime = remainingBrightnessLevels > 0 ? remainingTime / remainingBrightnessLevels : 0;
+    unsigned long completedSteps = animationDirection ? (rows - i - 1) * 255/stepSize + (255 - brightness)/stepSize : i * 255/stepSize + (255 - brightness)/stepSize;
+    unsigned long remainingSteps = rows * 255/stepSize - completedSteps;
+    unsigned long delayTime = remainingSteps > 0 ? remainingTime / remainingSteps : 0;
     delay(delayTime);
   }
 }
