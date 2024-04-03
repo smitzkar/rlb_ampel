@@ -42,8 +42,8 @@ bool stopDisplay = false; // used to interupt the display loop
 
 
 // adjust these according to the actual traffic light (or let the web interface do it)
-int globalPhase1Length = 45; // in seconds
-int globalPhase2Length = 75;
+int globalPhase1Length = 20; // in seconds
+int globalPhase2Length = 50;
 int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
 int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 
@@ -122,7 +122,7 @@ void loop() {
   // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
   switch (displayChoice) {
     case 1:
-      urbanKompassLoop();
+      urbanKompassLoop(); // I don't call it with parametres, it uses global variables as set above
       break;
     // case 2: 
     //   iterateBitmapsLoop();

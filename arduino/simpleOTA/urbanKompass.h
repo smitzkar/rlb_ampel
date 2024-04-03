@@ -9,6 +9,12 @@ Renamed to urbanKompass.h, to show that Ks worked on it :)
 
 // Get this from main.ino (currently simpleOTA.ino)
 extern bool stopDisplay;
+extern int globalPhase1Length; // in seconds
+extern int globalPhase2Length;
+extern int globalTolerance;
+extern int globalNtpUpdateInterval; // in minutes
+extern int displayChoice; // 1 = urbanKompass, 2 = iterateBitmaps, 
+extern bool animationDirection; // default is the original top down
 
 
 // /*--------------------- DEBUG  -------------------------*/
@@ -61,30 +67,48 @@ const uint8_t bike_vertical_mono[] PROGMEM = {
 0x00, 0x10, 0x10, 0x00, 0x00, 0x08, 0x20, 0x00, 0x00, 0x07, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+// New helper function to fade the rows
+void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long startTime, unsigned long duration) {
+  for (size_t step = 255; step > 0; step--) { // fade color from max to off
+
+    // Check if the command to stop the display has been received. If so, clear the display and return.
+    if (stopDisplay) {
+      dma_display->fillScreen(0); 
+      return;
+    }
+    int fadedR = r * step / 255;
+    int fadedG = g * step / 255;
+    int fadedB = b * step / 255;
+    dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(fadedR, fadedG, fadedB));
+
+    // A bit of math to calculate the delay time for each step. 
+    unsigned long elapsedTime = millis() - startTime;
+    unsigned long remainingTime = duration > elapsedTime ? duration - elapsedTime : 0;
+    unsigned long completedSteps = animationDirection ? (rows - i - 1) * 255 + (255 - step) : i * 255 + (255 - step);
+    unsigned long remainingSteps = rows * 255 - completedSteps;
+    unsigned long delayTime = remainingSteps > 0 ? remainingTime / remainingSteps : 0;
+    delay(delayTime);
+  }
+}
+
 // Call this with the RGB values and the number of rows to draw and fade.
 // The duration is the total time it should take to fade the rectangle (in seconds).
 void drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long duration) {
   dma_display->fillRect(56, 0, 73, 32, dma_display->color565(r, g, b)); //draw full rectangle
   unsigned long startTime = millis();
   duration *= 1000; // convert to milliseconds
-  for (size_t i = 0; i < rows; i++) //iterate over rows of rectangle
-  {
-    for (size_t color = 255; color > 0; color--) { // fade color from max to off
-
-      // Check if the command to stop the display has been received. If so, clear the display and return.
-      if (stopDisplay) {
-        dma_display->fillScreen(0); 
-        return;
-      }
-      dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(r == 255 ? color : r, g == 255 ? color : g, b == 255 ? color : b)); // a bit of a mess, but this effectively checks which colour is active, then faces that one
-      unsigned long elapsedTime = millis() - startTime;
-      unsigned long remainingTime = duration > elapsedTime ? duration - elapsedTime : 0;
-      unsigned long remainingSteps = (rows - i) * 255 + color;
-      unsigned long delayTime = remainingSteps > 0 ? remainingTime / remainingSteps : 0;
-      delay(delayTime);
+  
+  if (!animationDirection) { // Top-down animation
+    for (size_t i = 0; i < rows; i++) {
+      fadeRow(r, g, b, i, rows, startTime, duration);
+    }
+  } else { // Bottom-up animation
+    for (size_t i = rows; i > 0; i--) {
+      fadeRow(r, g, b, i - 1, rows, startTime, duration);
     }
   }
 }
+
 
 void urbanKompassSetup() {
 
@@ -117,8 +141,8 @@ void urbanKompassLoop() {
   // dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
 
   size_t rows = 73; // number of rows
-  drawAndFadeRectangle(0, 255, 0, rows, 20); // for green
+  drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green
   if (stopDisplay) return; // needs to be return if this isn't main loop
-  drawAndFadeRectangle(255, 0, 0, rows, 50); // for red
+  drawAndFadeRectangle(255, 0, 0, rows, globalPhase2Length); // for red
 }
 
