@@ -76,7 +76,7 @@ void drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long durati
         dma_display->fillScreen(0); 
         return;
       }
-      dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(r, g == 255 ? color : g, b == 255 ? color : b));
+      dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(r == 255 ? color : r, g == 255 ? color : g, b == 255 ? color : b)); // a bit of a mess, but this effectively checks which colour is active, then faces that one
       unsigned long elapsedTime = millis() - startTime;
       unsigned long remainingTime = duration > elapsedTime ? duration - elapsedTime : 0;
       unsigned long remainingSteps = (rows - i) * 255 + color;
@@ -117,8 +117,8 @@ void urbanKompassLoop() {
   // dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
 
   size_t rows = 73; // number of rows
-  drawAndFadeRectangle(0, 255, 0, rows, 180); // for green
+  drawAndFadeRectangle(0, 255, 0, rows, 20); // for green
   if (stopDisplay) return; // needs to be return if this isn't main loop
-  drawAndFadeRectangle(255, 0, 0, rows, 120); // for red
+  drawAndFadeRectangle(255, 0, 0, rows, 50); // for red
 }
 
