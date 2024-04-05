@@ -17,8 +17,8 @@ according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanat
 */
 
 #include <WiFi.h>
-#include <WebServer.h> // needs to be here for this part: WebServer server(80);
-#include "webpages.h" // needs quotation marks if in same directory
+#include <WebServer.h>  // needs to be here for this part: WebServer server(80);
+#include "webpages.h"   // needs quotation marks if in same directory
 #include "connectToWifi.h"
 #include "serverSetup.h"
 #include "setupDisplay.h"
@@ -122,11 +122,23 @@ void loop() {
   // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
   switch (displayChoice) {
     case 1:
-      urbanKompassLoop(); // I don't call it with parametres, it uses global variables as set above
+      urbanKompassLoop(); // I decided not to call it with parametres, it uses global variables as set above
       break;
-    // case 2: 
-    //   iterateBitmapsLoop();
-    //   break;
+    case 2: 
+      // airly();
+      Serial.println("Airly not implemented yet");
+      delay(5000); // just for the serial print
+      break;
+    case 3:
+      // iterateBitmapsLoop();
+      Serial.println("cycleImages not implemented yet");
+      delay(5000);
+      break;
+    case 4:
+      // krueneWelle();
+      Serial.println("Kruene Welle not implemented yet");
+      delay(5000);
+      break;
     default:
       Serial.println("Make a choice!");
   } 

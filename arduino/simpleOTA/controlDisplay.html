@@ -11,9 +11,10 @@
 
 <div id='choice'>
   <h1>Choose Display Option</h1>
-  <button id='btn1' onclick='updateDisplayChoice(1)'>Gruene Welle</button>
+  <button id='btn1' onclick='updateDisplayChoice(1)'>Radflow</button>
   <button id='btn2' onclick='updateDisplayChoice(2)'>Airly</button>
   <button id='btn3' onclick='updateDisplayChoice(3)'>cycleImages</button>
+  <button id='btn4' onclick='updateDisplayChoice(4)'>Kruene Welle</button>
 </div>
 
 <div id='parameters'>
@@ -55,6 +56,7 @@ function updateDisplayChoice(choice) {
   document.getElementById('btn1').classList.remove('active');
   document.getElementById('btn2').classList.remove('active');
   document.getElementById('btn3').classList.remove('active');
+  document.getElementById('btn4').classList.remove('active');
 
   // Add the 'active' class to the clicked button
   document.getElementById('btn' + choice).classList.add('active');
@@ -107,6 +109,7 @@ function fetchCurrentValues() {
       document.getElementById('btn1').classList.remove('active');
       document.getElementById('btn2').classList.remove('active');
       document.getElementById('btn3').classList.remove('active');
+      document.getElementById('btn4').classList.remove('active');
       document.getElementById('btnTopDown').classList.remove('active');
       document.getElementById('btnBottomUp').classList.remove('active');
   

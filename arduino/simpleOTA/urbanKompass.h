@@ -116,6 +116,7 @@ void drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long durati
 
 
 void urbanKompassSetup() {
+  // Ks: Might need to move this to main.ino, but remove the drawBitmap(.. bike_vertical_mono ..) part
 
   // put your setup code here, to run once:
   // delay(1000); Serial.begin(115200); delay(200); // what is this for??
