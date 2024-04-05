@@ -18,19 +18,33 @@
 </div>
 
 <div id='parameters'>
-  <h2>Enter parameters for Ampel-Schaltung</h2>
-  <label for='phase1Length'>Phase 1 Length (in seconds):</label>
-  <input type='text' id='phase1Length' name='phase1Length'><br><br>
-  <label for='phase2Length'>Phase 2 Length (in seconds):</label>
-  <input type='text' id='phase2Length' name='phase2Length'><br><br>
-  <label for='ntpUpdateInterval'>NTP Update Interval (in minutes):</label>
-  <input type='text' id='ntpUpdateInterval' name='ntpUpdateInterval'><br><br>
-  <label for='tolerance'>Tolerance (in seconds, 0-20):</label>
-  <input type='text' id='tolerance' name='tolerance'><br><br>
 
-  <label for='animationDirection'>Direction (top down or bottom up)</label><br>
+  <br><br>
+  <button id='changeParameters?'>Want to change time parameters?</button>
+
+
+  <div id='timeParameters' style='display: none;'>
+    <h2>Enter parameters for Ampel-Schaltung</h2>
+    <label for='phase1Length'>Phase 1 Length (in seconds):</label>
+    <input type='text' id='phase1Length' name='phase1Length'><br><br>
+    <label for='phase2Length'>Phase 2 Length (in seconds):</label>
+    <input type='text' id='phase2Length' name='phase2Length'><br><br>
+    <label for='ntpUpdateInterval'>NTP Update Interval (in minutes):</label>
+    <input type='text' id='ntpUpdateInterval' name='ntpUpdateInterval'><br><br>
+    <label for='tolerance'>Tolerance (in seconds, 0-20):</label>
+    <input type='text' id='tolerance' name='tolerance'><br><br>
+  </div>
+
+  <br><br>
+
+
+  <label for='animationDirection'>Direction of animation (top down or bottom up)</label><br>
   <button id='btnTopDown' onclick='updateDirection(false)'>Top Down</button>
   <button id='btnBottomUp' onclick='updateDirection(true)'>Bottom Up</button><br><br>
+
+  <button id='setTimeButton'>Want to start at a specific time?</button><br><br>
+  <label for='setTime' id='setTimeLabel' style='display: none;'>Set specific time for when to start the cycle.</label>
+  <input type='time' id='setTime' name='setTime' value='00:00:00' style='display: none;'>
 
   <button onclick='sendParameters()'>Send Parameters</button><span id='response'></span>
 </div>
@@ -143,6 +157,32 @@ function updateParametersDisplay(choice) {
   }
 }
 
+// Add onclick event listener to the changeParameters? button to show or hide the first four input fields and their labels
+document.getElementById('changeParameters?').addEventListener('click', function() {
+
+  if (document.getElementById('timeParameters').style.display !== 'none') {
+    document.getElementById('timeParameters').style.display = 'none';
+    document.getElementById('changeParameters?').innerText = 'Want to change time parameters?';
+  } else {
+    document.getElementById('timeParameters').style.display = 'block'
+    document.getElementById('changeParameters?').innerText = 'Please close this if you don\'t want to change time parameters.';
+  }
+});
+
+// add onclick event listener to the setTime? button to show the time input field and label
+document.getElementById('setTimeButton').addEventListener('click', function() {
+  // Show the time input field and label when the button is clicked, or hide again
+  if (document.getElementById('setTime').style.display !== 'none') {
+    document.getElementById('setTime').style.display = 'none';
+    document.getElementById('setTimeLabel').style.display = 'none';
+    document.getElementById('setTimeButton').innerText = 'Want to start at a specific time?'; 
+  }
+  else {
+    document.getElementById('setTime').style.display = 'block';
+    document.getElementById('setTimeLabel').style.display = 'block';
+    document.getElementById('setTimeButton').innerText = 'Please close this if you don\'t want to set a specific time.';
+  }
+});
 
 // Function to send the parameters for the Ampel-Schaltung 
 function sendParameters() {
@@ -154,9 +194,15 @@ function sendParameters() {
   var ntpUpdateInterval = document.getElementById('ntpUpdateInterval').value;
   var tolerance = document.getElementById('tolerance').value;
   
+  // Check if the time input field is visible
+  var setTime = '';
+  if (document.getElementById('setTime').style.display !== 'none') {
+    setTime = document.getElementById('setTime').value;
+  }
+  
   // Send a GET request to the ESP32
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', '/updateParameters?phase1Length=' + phase1Length + '&phase2Length=' + phase2Length + '&ntpUpdateInterval=' + ntpUpdateInterval + '&tolerance=' + tolerance, true);
+  xhr.open('GET', '/updateParameters?phase1Length=' + phase1Length + '&phase2Length=' + phase2Length + '&ntpUpdateInterval=' + ntpUpdateInterval + '&tolerance=' + tolerance + (setTime ? '&setTime=' + setTime : ''), true);
   xhr.send();
   
   xhr.onreadystatechange = function() {

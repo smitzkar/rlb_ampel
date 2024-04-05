@@ -10,6 +10,9 @@ extern int globalTolerance;
 extern int globalNtpUpdateInterval; 
 extern int displayChoice;
 extern bool animationDirection;
+extern bool startAtSpecificTime;
+extern int startHour;
+extern int startMinute;
 
 
 
@@ -69,22 +72,32 @@ void serverSetup() {
     // Send a response back to the browser
     server.send(200, "text/plain", "Animation direction updated successfully");
   });
-  server.on("/updateParameters", HTTP_GET, []() {
-    // Get the parameters from the request
-    String phase1Length = server.arg("phase1Length");
-    String phase2Length = server.arg("phase2Length");
-    String ntpUpdateInterval = server.arg("ntpUpdateInterval");
-    String tolerance = server.arg("tolerance");
+server.on("/updateParameters", HTTP_GET, []() {
+  // Get the parameters from the request
+  String phase1Length = server.arg("phase1Length");
+  String phase2Length = server.arg("phase2Length");
+  String ntpUpdateInterval = server.arg("ntpUpdateInterval");
+  String tolerance = server.arg("tolerance");
+  String setTime = server.arg("setTime");
 
-    // Convert to int and store in the global variables
-    globalPhase1Length = phase1Length.toInt();
-    globalPhase2Length = phase2Length.toInt();
-    globalNtpUpdateInterval = ntpUpdateInterval.toInt();
-    globalTolerance = tolerance.toInt();
+  // Convert to int and store in the global variables
+  globalPhase1Length = phase1Length.toInt();
+  globalPhase2Length = phase2Length.toInt();
+  globalNtpUpdateInterval = ntpUpdateInterval.toInt();
+  globalTolerance = tolerance.toInt();
 
-    // Send a response back to the browser
-    server.send(200, "text/plain", "Parameters updated successfully");  
-  });
+  // Handle the setTime parameter
+  if (setTime == "") {
+    startAtSpecificTime = false;
+  } else {
+    startAtSpecificTime = true;
+    int colonPos = setTime.indexOf(':');
+    startHour = setTime.substring(0, colonPos).toInt();
+    startMinute = setTime.substring(colonPos + 1).toInt();
+  }
+  // Send a response back to the browser
+  server.send(200, "text/plain", "Parameters updated successfully");  
+});
 
 
 

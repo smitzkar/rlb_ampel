@@ -34,9 +34,9 @@ Since I'm still struggling a bit with the FreeRTOS stuff:
 
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
-const char* host = "esp32";
-const char* ssid = "Karl";
-const char* password = "Rlb_KsESP";
+const char* host = "ampel";
+const char* ssid = "Rlb_Ampel";
+const char* password = "Rlb_Ampel<3";
 
 bool stopDisplay = false; // used to interupt the display loop 
 
@@ -47,7 +47,10 @@ int globalPhase2Length = 50;
 int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
 int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 
-bool animationDirection = false; // default is the original top down
+bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
+bool startAtSpecificTime = false;
+int startHour = 0;
+int startMinute = 0;
 
 // WARNING: Do NOT use any sort of LED stuff for troubleshooting on the esp32 wired up to the Ampel!
 // built-in LED on the other one is power only
@@ -100,7 +103,8 @@ void setup() {
     //   iterateBitmapsSetup();
     //   break;
     default:
-      Serial.println("Make a choice!");
+      Serial.println("Defaulting to Urban Kompass!");
+      urbanKompassSetup();
   } 
 
   delay(2000); 
