@@ -82,7 +82,6 @@ const char* loginIndex = loginIndexStr.c_str();
 
 /* Web Interace */
 std::string controlDisplayIndexStr = R"(
-
 <!-- 
   the simple Webinterface
 
@@ -92,9 +91,10 @@ std::string controlDisplayIndexStr = R"(
 
 <div id='choice'>
   <h1>Choose Display Option</h1>
-  <button id='btn1' onclick='updateDisplayChoice(1)'>Gruene Welle</button>
+  <button id='btn1' onclick='updateDisplayChoice(1)'>Radflow</button>
   <button id='btn2' onclick='updateDisplayChoice(2)'>Airly</button>
   <button id='btn3' onclick='updateDisplayChoice(3)'>cycleImages</button>
+  <button id='btn4' onclick='updateDisplayChoice(4)'>Kruene Welle</button>
 </div>
 
 <div id='parameters'>
@@ -108,7 +108,7 @@ std::string controlDisplayIndexStr = R"(
   <label for='tolerance'>Tolerance (in seconds, 0-20):</label>
   <input type='text' id='tolerance' name='tolerance'><br><br>
 
-  <label for='direction'>Direction (top down or bottom up)</label><br>
+  <label for='animationDirection'>Direction (top down or bottom up)</label><br>
   <button id='btnTopDown' onclick='updateDirection(false)'>Top Down</button>
   <button id='btnBottomUp' onclick='updateDirection(true)'>Bottom Up</button><br><br>
 
@@ -136,6 +136,7 @@ function updateDisplayChoice(choice) {
   document.getElementById('btn1').classList.remove('active');
   document.getElementById('btn2').classList.remove('active');
   document.getElementById('btn3').classList.remove('active');
+  document.getElementById('btn4').classList.remove('active');
 
   // Add the 'active' class to the clicked button
   document.getElementById('btn' + choice).classList.add('active');
@@ -145,10 +146,10 @@ function updateDisplayChoice(choice) {
 }
 
 // Function to send the direction choice
-function updateDirection(direction) {
+function updateDirection(animationDirection) {
   // Send a GET request to the server with the direction as a parameter
   var xhr = new XMLHttpRequest();
-  xhr.open('GET', '/updateDirection?direction=' + direction, true);
+  xhr.open('GET', '/updateDirection?direction=' + animationDirection, true);
   xhr.send();
   
   // Remove the 'active' class from all buttons
@@ -156,7 +157,7 @@ function updateDirection(direction) {
   document.getElementById('btnBottomUp').classList.remove('active');
 
   // Add the 'active' class to the clicked button
-  if (direction) {
+  if (animationDirection) {
     document.getElementById('btnBottomUp').classList.add('active');
   } else {
     document.getElementById('btnTopDown').classList.add('active');
@@ -188,6 +189,7 @@ function fetchCurrentValues() {
       document.getElementById('btn1').classList.remove('active');
       document.getElementById('btn2').classList.remove('active');
       document.getElementById('btn3').classList.remove('active');
+      document.getElementById('btn4').classList.remove('active');
       document.getElementById('btnTopDown').classList.remove('active');
       document.getElementById('btnBottomUp').classList.remove('active');
   
@@ -196,7 +198,7 @@ function fetchCurrentValues() {
       document.getElementById('btn' + currentValues.displayChoice).classList.add('active');
 
       // Add the 'active' class to the current direction button
-      if (currentValues.direction) {
+      if (currentValues.animationDirection) {
         document.getElementById('btnBottomUp').classList.add('active');
       } else {
         document.getElementById('btnTopDown').classList.add('active');
