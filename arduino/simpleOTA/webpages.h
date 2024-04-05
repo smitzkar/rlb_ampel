@@ -59,6 +59,7 @@ std::string style = R"(
 )";
 
 /* Login page */
+// Obviously we should be using some proper login system, but this is enough to keep out the casual user
 std::string loginIndexStr = R"(
 <form name=loginForm>
 <h1>ESP32 Login</h1>
