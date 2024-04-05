@@ -68,8 +68,19 @@ void loop()
   time_t now;
   time(&now); // Call the time function, which checks the current time and stores it in the variable now (we pass the address to the function, so it can both access and modify the variable). Is C stuff, just go with it for now :)
 
+  // Adds a 30s buffer to the start time, so that the first cycle starts at the specified time. 
+  // (as long as the sync to full minute function is also used!)
   if (startAtSpecificTime) {
-    delayUntil(startHour, startMinute);
+    if (startMinute == 0) {
+      startMinute = 59;
+      // still getting used to ternary operator. 
+      // startHour is set to:(if startHour is 0, set it to 23, otherwise set it to startHour - 1)
+      startHour = startHour == 0 ? 23 : startHour - 1; 
+      delayUntil(startHour, startMinute, 30); 
+    } else {
+      startMinute -= 1;
+      delayUntil(startHour, startMinute, 30); 
+    }
   }
 
   // Update the time from the NTP server every ntpUpdateInterval minutes
