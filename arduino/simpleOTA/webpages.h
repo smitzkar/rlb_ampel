@@ -4,7 +4,7 @@
 
 #include <string>
 
-/* Style */
+/* MARK: Style */
 std::string style = R"(
 <style>
   #file-input, input {
@@ -81,7 +81,7 @@ std::string loginIndexStr = R"(
 const char* loginIndex = loginIndexStr.c_str();
 
 
-/* Web Interace */
+/*MARK: Web Interace */
 std::string controlDisplayIndexStr = R"(
 <!-- 
   the simple Webinterface
@@ -301,7 +301,7 @@ const char* controlDisplayIndex = controlDisplayIndexStr.c_str();
 
 
  
-/* OTA update Page */
+/* MARK: OTA update Page */
 std::string otaIndexStr = R"(
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 <form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>
@@ -354,7 +354,7 @@ const char* otaIndex = otaIndexStr.c_str();
 
 
 
-// my old addition code
+// MARK: my old addition code
 std::string additionIndexStr = R"(
 <!-- Adjusted HTML and JavaScript -->
 <label for='num1'>Number 1:</label>

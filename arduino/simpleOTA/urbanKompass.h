@@ -67,6 +67,7 @@ const uint8_t bike_vertical_mono[] PROGMEM = {
 0x00, 0x10, 0x10, 0x00, 0x00, 0x08, 0x20, 0x00, 0x00, 0x07, 0xc0, 0x00, 0x00, 0x00, 0x00, 0x00
 };
 
+//MARK: helper functions
 // New helper function to fade the rows
 void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long startTime, unsigned long duration, int stepSize = 16) {
   for (int brightness = 255; brightness > 0; brightness -= stepSize) { // fade color from max to off
@@ -114,7 +115,7 @@ void drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long durati
   }
 }
 
-
+//MARK: setup
 void urbanKompassSetup() {
   // Ks: Might need to move this to main.ino, but remove the drawBitmap(.. bike_vertical_mono ..) part
 
@@ -138,7 +139,7 @@ void urbanKompassSetup() {
 
 }
 
-
+//MARK: loop
 void urbanKompassLoop() {
 
   // // draw bike pictogram

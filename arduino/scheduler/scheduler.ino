@@ -49,14 +49,13 @@ int syncToMinute(int tolerance) {
   int seconds = currentTime->tm_sec;
 
   if (tolerance < seconds && seconds < (60 - tolerance)) {
-    // Calculate the remaining seconds and milliseconds in the current minute
+    // Calculate the remaining seconds until the next minute (can't remember why I went with 59 instead of 60))
     int remainingSeconds = 59 - seconds;
-    long remainingMillis = 1000 - (millis() % 1000);
     Serial.print("Syncing to minute. Starting in:");
     Serial.println(remainingSeconds);
 
     // Delay for the remaining time
-    delay(remainingSeconds * 1000 + remainingMillis);
+    delay(remainingSeconds * 1000);
     Serial.println("Synced to minute");
     return 0;
   }

@@ -9,6 +9,7 @@
   (no access to underlying code here, so safe to play with)
 -->
 
+<!--MARK: html-->
 <div id='choice'>
   <h1>Choose Display Option</h1>
   <button id='btn1' onclick='updateDisplayChoice(1)'>Radflow</button>
@@ -50,13 +51,9 @@
 </div>
 
 
-<style>
-  .active {
-    border: 2px solid green;
-    background-color: lightgreen;
-  }
-</style>
 
+
+<!--MARK: script-->
 <script>
 
 // Function to send the display choice
@@ -215,6 +212,7 @@ function sendParameters() {
 }
 </script>
 
+<!--MARK: style-->
 <style>
   #file-input, input {
     width: 100%;
@@ -263,5 +261,9 @@ function sendParameters() {
     background: #3498db;
     color: #fff;
     cursor: pointer;
+  }
+  .active {
+    border: 2px solid green;
+    background-color: lightgreen;
   }
 </style>

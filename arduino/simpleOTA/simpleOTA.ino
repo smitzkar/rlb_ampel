@@ -60,7 +60,7 @@ int startMinute = 0;
 WebServer server(80);
 
 
-
+//MARK: handleServer
 // Basically the housekeeping function
 // moved to separate core to ensure that even if the wifi function is stuck, the display will still update
 void handleServer(void * parameter) {
@@ -76,6 +76,7 @@ void handleServer(void * parameter) {
 }
 
 
+//MARK: setup
 void setup() {
   
   Serial.begin(115200);   // for output to serial monitor
@@ -115,7 +116,7 @@ void setup() {
 
 }
 
-
+//MARK: loop
 void loop() {
   // can put stuff in here 
   // maybe remove the updateDisplay function and just put it in here
