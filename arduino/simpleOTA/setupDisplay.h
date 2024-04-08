@@ -6,6 +6,7 @@
 #include <Adafruit_GFX.h>
 
 
+// I don't use this stuff, but I'll keep it for now, in case I missed deleting it somewhere
 /*--------------------- DEBUG  -------------------------*/
 #define Sprintln(a) (Serial.println(a))
 #define SprintlnDEC(a, x) (Serial.println(a, x))

@@ -1,18 +1,17 @@
 /* Temporary notes
 
-to actually start after upload, press the RESET button on esp32
 remember to actually be on same network...
 
 either access via IP or http://esp32.local/ (replace esp32 with whatever the host is set up as)
 
 login for webserver in line: "if(form.userid.value=='admin' && form.pwd.value=='Rlb_Ampel<3')"
 the password doesn't actually do any sort of login, it just leads to ../serverIndex page
+-> should figure out a way to actually do a login, but for now it keeps out the casual user
 
 must ALWAYS include the OTA code when uploading new sketch, because it overwrites everything, so if it's not uploaded again, there's no more OTA functionality
 to upload new sketch (remember to include OTA code):
 arduinoIDE > sketch > export compiled binary
 
-according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanation_for_vtaskdelay_freertos/ delay() on the esp32 actually wraps vTaskDelay. So... is nonblocking by default. 
 
 */
 
@@ -40,7 +39,7 @@ const char* host = "ampel";
 const char* ssid = "Rlb_Ampel";
 const char* password = "Rlb_Ampel<3";
 
-bool stopDisplay = false; // used to interupt the display loop 
+bool stopDisplay = false; // used to interupt the display loop. Not currently being used
 
 
 // adjust these according to the actual traffic light (or let the web interface do it)
@@ -69,7 +68,6 @@ void handleServer(void * parameter) {
   for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
 
     if (WiFi.status() != WL_CONNECTED) {   // check if WiFi is still connected, attempt to reconnect if so
-      // digitalWrite(led, false);
       connectToWiFiAndSetupMDNS(ssid, password, host);
     }
     server.handleClient();
@@ -86,7 +84,7 @@ void setup() {
    // Moved this from urbanKompass.h, because I think it only needs to run once and is required for all display options
   /************** DISPLAY **************/
   Serial.println("...Starting Display"); 
-  dma_display = new MatrixPanel_I2S_DMA(mxconfig);
+  dma_display = new MatrixPanel_I2S_DMA(mxconfig); // I think it just grabs mxconfig from the setupDisplay.h file
   dma_display->begin();
   dma_display->setBrightness8(255); //0-255
 
