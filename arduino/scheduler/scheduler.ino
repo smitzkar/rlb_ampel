@@ -40,7 +40,7 @@ int startMinute = 25;
 
 
 
-
+//MARK: syncToMinute
 // Checks current offset from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
 int syncToMinute(int tolerance) {
   time_t now;
@@ -71,6 +71,7 @@ int syncToMinute(int tolerance) {
 }
 
 
+//MARK: blinkCycle
 void blinkCycle(int fastBlinkCount, int slowBlinkCount, int fastBlinkDuration, int slowBlinkDuration) {
   // Blink the LED fast for fastBlinkDuration seconds
   Serial.println(blinkControl(fastBlinkCount, fastBlinkDuration));
@@ -87,6 +88,8 @@ void blinkCycle(int fastBlinkCount, int slowBlinkCount, int fastBlinkDuration, i
 // 3) calculate an average actual runtime and adjust the duration accordingly 
 // (maybe store this adjustment somewhere FOR SCIENCE?)
 
+
+//MARK: blinkControl
 unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
 
   if (duration == fastBlinkDuration) {
@@ -147,6 +150,7 @@ unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
   return millis() - startTime; // return the total runtime of the function
 }
 
+//MARK: delayUntil
 // Delays until specified time, with optional buffer in seconds (don't use a buffer larger than 59 seconds. I could write some code handling this case, but this buffer is hardcoded and not accessible to the user, so dear reader... if you want a larger buffer, implement it yourself!).
 void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
   time_t now;
@@ -180,6 +184,7 @@ void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
 }
 
 
+//MARK: setup
 void setup()
 {
 
@@ -209,6 +214,7 @@ void setup()
   Serial.println(ctime(&now)); // Print the current time to the serial monitor
 }
 
+//MARK: loop
 void loop()
 {
   time_t now;
