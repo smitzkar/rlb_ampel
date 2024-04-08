@@ -56,8 +56,11 @@ void serverSetup() {
     // Get the choice from the request
     String choice = server.arg("choice");
     
-    // Update the global variable
+    // Update global variable
     displayChoice = choice.toInt();
+    // for debugging (shouldn't need to call Serial.begin(..) again here, if it's in main file))
+    Serial.print("Display choice updated to: ");
+    Serial.println(displayChoice);
     
     // Send a response back to the browser
     server.send(200, "text/plain", "Display choice updated successfully");
