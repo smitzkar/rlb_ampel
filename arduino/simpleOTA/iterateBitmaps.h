@@ -60,15 +60,16 @@ void drawUBahn() { //build multicolor display by layering monochrome bitmaps
 };
 
 
-void iterateBitmapsSetup() {
-  // delay(1000); Serial.begin(115200); delay(200);
+// no longer needed 
+// void iterateBitmapsSetup() {
+//   // delay(1000); Serial.begin(115200); delay(200);
 
-  /************** DISPLAY **************/
-  Sprintln("...Starting Display");
-  dma_display = new MatrixPanel_I2S_DMA(mxconfig);
-  dma_display->begin();
-  dma_display->setBrightness8(255); //0-255
-}
+//   /************** DISPLAY **************/
+//   Sprintln("...Starting Display");
+//   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
+//   dma_display->begin();
+//   dma_display->setBrightness8(255); //0-255
+// }
 
 
 void iterateBitmapsLoop() { //iterrate through bitmaps
