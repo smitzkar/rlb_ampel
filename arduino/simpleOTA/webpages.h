@@ -90,6 +90,7 @@ std::string controlDisplayIndexStr = R"(
   (no access to underlying code here, so safe to play with)
 -->
 
+<!--MARK: html-->
 <div id='choice'>
   <h1>Choose Display Option</h1>
   <button id='btn1' onclick='updateDisplayChoice(1)'>Radflow</button>
@@ -131,13 +132,9 @@ std::string controlDisplayIndexStr = R"(
 </div>
 
 
-<style>
-  .active {
-    border: 2px solid green;
-    background-color: lightgreen;
-  }
-</style>
 
+
+<!--MARK: script-->
 <script>
 
 // Function to send the display choice
