@@ -25,6 +25,8 @@ according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanat
 #include "urbanKompass.h"
 #include "bitmaps.h"        // various preconfigured bitmaps (only include this once!)
 #include "iterateBitmaps.h" // functions to iterate over bitmaps
+#include "airlyBitmaps.h"
+#include "iterateAirlyBitmaps.h"
 
 /*
 Since I'm still struggling a bit with the FreeRTOS stuff: 
@@ -46,7 +48,7 @@ int globalPhase1Length = 20; // in seconds
 int globalPhase2Length = 50;
 int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
-int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 
+int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 3 = airly, 4 = krueneWelle
 bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
 bool startAtSpecificTime = false;
 int startHour = 0;
@@ -81,13 +83,22 @@ void setup() {
   
   Serial.begin(115200);   // for output to serial monitor
 
+   // Moved this from urbanKompass.h, because I think it only needs to run once and is required for all display options
+  /************** DISPLAY **************/
+  Serial.println("...Starting Display"); 
+  dma_display = new MatrixPanel_I2S_DMA(mxconfig);
+  dma_display->begin();
+  dma_display->setBrightness8(255); //0-255
+
+
+
   delay(2000); // added a bunch of delays to hopefully fix the display not starting properly
 
   connectToWiFiAndSetupMDNS(ssid, password, host);   // initial connection to wifi and sets alternative IP -> http://"host".local
 
   delay(2000); 
 
-  serverSetup();          // this one starts the web server task, which handles all the OTA stuff
+  serverSetup(); // this one starts the web server task, which handles all the OTA stuff
 
   delay(2000); 
 
@@ -96,17 +107,26 @@ void setup() {
   // Hm... 
   // This won't run if the choice is changed during runtime. 
   // Need to do some more finagling.
-  switch (displayChoice) {
-    case 1:
-      urbanKompassSetup();
-      break;
-    // case 2: 
-    //   iterateBitmapsSetup();
-    //   break;
-    default:
-      Serial.println("Defaulting to Urban Kompass!");
-      urbanKompassSetup();
-  } 
+  // Might not actually need to run any setup function for these?
+  // switch (displayChoice) {
+  //   case 1:
+  //     urbanKompassSetup();
+  //     break;
+  //   case 2: 
+  //     iterateAirlyBitmapsLoop();
+  //     break;
+  //   case 3: 
+  //     iterateBitmapsLoop();
+  //     break;
+  //   case 4:
+  //     // krueneWelle();
+  //     Serial.println("Kruene Welle not implemented yet");
+  //     delay(5000);
+  //     break;
+  //   default:
+  //     Serial.println("Defaulting to Urban Kompass!");
+  //     urbanKompassSetup();
+  // } 
 
   delay(2000); 
 
@@ -121,23 +141,18 @@ void loop() {
   // can put stuff in here 
   // maybe remove the updateDisplay function and just put it in here
 
-  Serial.println(displayChoice);
-
-  // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS
+  // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS?
   // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
+  // edit: no longer required, because I removed the setup functions
   switch (displayChoice) {
     case 1:
-      urbanKompassLoop(); // I decided not to call it with parametres, it uses global variables as set above
+      urbanKompassLoop(); // I decided not to call it with parametres, it just uses global variables as set above
       break;
     case 2: 
-      // airly();
-      Serial.println("Airly not implemented yet");
-      delay(5000); // just for the serial print
+      iterateAirlyBitmapsLoop();
       break;
     case 3:
-      // iterateBitmapsLoop();
-      Serial.println("cycleImages not implemented yet");
-      delay(5000);
+      iterateBitmapsLoop();
       break;
     case 4:
       // krueneWelle();

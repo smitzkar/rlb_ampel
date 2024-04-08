@@ -31,7 +31,7 @@ extern bool animationDirection; // default is the original top down
 // #define B1_PIN 27
 // #define R2_PIN 14
 // #define G2_PIN 12
-// #define B2_PIN 13 // what is this for??
+// #define B2_PIN 13 
 // #define A_PIN 23
 // #define B_PIN 19
 // #define C_PIN 5
@@ -116,28 +116,28 @@ void drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long durati
 }
 
 //MARK: setup
-void urbanKompassSetup() {
-  // Ks: Might need to move this to main.ino, but remove the drawBitmap(.. bike_vertical_mono ..) part
+// void urbanKompassSetup() {
+//   // Ks: Might need to move this to main.ino, but remove the drawBitmap(.. bike_vertical_mono ..) part
 
-  // put your setup code here, to run once:
-  // delay(1000); Serial.begin(115200); delay(200); // what is this for??
+//   // put your setup code here, to run once:
+//   // delay(1000); Serial.begin(115200); delay(200); // what is this for??
 
-  delay(2000); // to fix the display not starting properly
+//   delay(2000); // to fix the display not starting properly
 
-  /************** DISPLAY **************/
-  Sprintln("...Starting Display");
-  dma_display = new MatrixPanel_I2S_DMA(mxconfig);
-  dma_display->begin();
-  dma_display->setBrightness8(255); //0-255
+//   /************** DISPLAY **************/
+//   Sprintln("...Starting Display");
+//   dma_display = new MatrixPanel_I2S_DMA(mxconfig);
+//   dma_display->begin();
+//   dma_display->setBrightness8(255); //0-255
 
-  // add some delay to maybe give it time to properly initialise everything -> prevent faulty early display loops 
-  delay(2000);
+//   // add some delay to maybe give it time to properly initialise everything -> prevent faulty early display loops 
+//   delay(2000);
 
-  // draw bike pictogram
-  // does this need to be called on every iteration? Doesn't really update anything
-  dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(220,220,220));
+//   // draw bike pictogram
+//   // does this need to be called on every iteration? Doesn't really update anything
+//   dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(220,220,220));
 
-}
+// }
 
 //MARK: loop
 void urbanKompassLoop() {
@@ -145,7 +145,8 @@ void urbanKompassLoop() {
   // // draw bike pictogram
   // // does this need to be called on every iteration? Doesn't really update anything
   // // moved it out of here and to setup
-  // dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
+  // moved it back in here, to entirely remove the setup function
+  dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
 
   size_t rows = 73; // number of rows
   drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green
