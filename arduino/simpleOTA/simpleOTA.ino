@@ -202,6 +202,21 @@ void loop() {
   time_t now;
   time(&now); 
 
+  // Update the time from the NTP server every ntpUpdateInterval minutes
+  if (localtime(&now)->tm_min % ntpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_min) {
+    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+    lastNtpUpdate = localtime(&now)->tm_min;
+    Serial.println(ctime(&now)); // Print the current time to the serial monitor
+    Serial.println("Blinks during last 5min: ");
+    Serial.println(blinks); // Print the number of blinks during the last 5 minutes
+    totalBlinks += blinks; // Add the number of blinks to the total
+    blinks = 0; // Reset the number of blinks
+    Serial.println("Total blinks: ");
+    Serial.println(totalBlinks); // Print the total number of blinks
+
+    syncToMinute(tolerance); // Delay until just before the start of the next full minute
+  }
+
   if (startAtSpecificTime) {
     delayUntil(startHour, startMinute); //MARK: FOR TESTING ONLY?
     Serial.println("Starting new cycle of blinking at ");
