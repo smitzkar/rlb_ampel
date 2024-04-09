@@ -9,6 +9,7 @@ extern int globalPhase1Length;
 extern int globalTolerance; 
 extern int globalNtpUpdateInterval; 
 extern int displayChoice;
+extern bool changedDisplayChoice;
 extern bool animationDirection;
 extern bool startAtSpecificTime;
 extern int startHour;
@@ -58,6 +59,8 @@ void serverSetup() {
     
     // Update global variable
     displayChoice = choice.toInt();
+    changedDisplayChoice = true;
+
     // for debugging (shouldn't need to call Serial.begin(..) again here, if it's in main file))
     Serial.print("Display choice updated to: ");
     Serial.println(displayChoice);

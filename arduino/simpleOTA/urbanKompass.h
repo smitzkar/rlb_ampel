@@ -69,7 +69,7 @@ const uint8_t bike_vertical_mono[] PROGMEM = {
 
 //MARK: helper functions
 // New helper function to fade the rows
-void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long startTime, unsigned long duration, int stepSize = 16) {
+void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long startTime, unsigned long duration, int stepSize = 8) {
   for (int brightness = 255; brightness > 0; brightness -= stepSize) { // fade color from max to off
 
     // Check if the command to stop the display has been received. If so, clear the display and return.
@@ -146,7 +146,8 @@ void urbanKompassLoop() {
   // // does this need to be called on every iteration? Doesn't really update anything
   // // moved it out of here and to setup
   // moved it back in here, to entirely remove the setup function
-  dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
+  // and moved to the switch statement in simpleOTA.ino
+  // dma_display->drawBitmap(33, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255));
 
   size_t rows = 73; // number of rows
   drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green

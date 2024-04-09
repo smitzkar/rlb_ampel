@@ -48,6 +48,7 @@ int globalPhase2Length = 50;
 int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
 int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 3 = airly, 4 = krueneWelle
+bool changedDisplayChoice = true; // to see if the display choice was changed during runtime. Is set true, because urbanKompass is the default
 bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
 bool startAtSpecificTime = false;
 int startHour = 0;
@@ -144,6 +145,10 @@ void loop() {
   // edit: no longer required, because I removed the setup functions
   switch (displayChoice) {
     case 1:
+      if (changedDisplayChoice) {
+        dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way
+        changedDisplayChoice = false;
+      }
       urbanKompassLoop(); // I decided not to call it with parametres, it just uses global variables as set above
       break;
     case 2: 

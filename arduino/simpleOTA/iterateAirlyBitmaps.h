@@ -5,12 +5,12 @@
 //#include "airlyBitmaps.h" // must only be included once. here or in main.ino (simpleOTA.ino)
 
 int current_bitmap2 = 0;
-const int num_of_airlyBitmaps = 4;
+const int num_of_airlyBitmaps = 2; // set this to 4 again 
 
-const uint8_t *airly_bitmap_bits[4] = {
-  AIRLY_Neutral_bits,
+const uint8_t *airly_bitmap_bits[2] = { // set this to 4 again
   AIRLY_HAPPY_bits,
-  AIRLY_SAD_bits,
+  // AIRLY_Neutral_bits,
+  // AIRLY_SAD_bits,
   AIRLY_SAD2_bits,
 };
 
