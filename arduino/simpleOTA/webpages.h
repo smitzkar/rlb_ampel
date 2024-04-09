@@ -131,7 +131,12 @@ std::string controlDisplayIndexStr = R"(
   <button onclick='sendParameters()'>Send Parameters</button><span id='response'></span>
 </div>
 
-
+<style>
+  .active {
+  border: 2px solid green;
+  background-color: lightgreen;
+  }
+</style>
 
 
 <!--MARK: script-->
