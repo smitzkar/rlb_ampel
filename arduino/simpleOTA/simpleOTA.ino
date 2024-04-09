@@ -22,6 +22,7 @@ arduinoIDE > sketch > export compiled binary
 #include "serverSetup.h"
 #include "setupDisplay.h"
 #include "urbanKompass.h"
+#include "time.h"
 #include "bitmaps.h"        // various preconfigured bitmaps (only include this once!)
 #include "iterateBitmaps.h" // functions to iterate over bitmaps
 #include "airlyBitmaps.h"
@@ -38,8 +39,9 @@ Since I'm still struggling a bit with the FreeRTOS stuff:
 const char* host = "ampel";
 const char* ssid = "Rlb_Ampel";
 const char* password = "Rlb_Ampel<3";
-
-bool stopDisplay = false; // used to interupt the display loop. Not currently being used
+const char* ntpServer = "0.pool.ntp.org";
+const long  gmtOffset_sec = 3600;       // Offset for your timezone in seconds
+const int   daylightOffset_sec = 3600;  // Offset for daylight saving time in seconds
 
 
 // adjust these according to the actual traffic light (or let the web interface do it)
@@ -49,10 +51,15 @@ int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
 int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 3 = airly, 4 = krueneWelle
 bool changedDisplayChoice = true; // to see if the display choice was changed during runtime. Is set true, because urbanKompass is the default
+bool stopDisplay = false; // used to interupt the display loop. Not currently being used
 bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
-bool startAtSpecificTime = false;
-int startHour = 0;
-int startMinute = 0;
+bool startAtSpecificTime = true; // for testing purposes
+int startHour = 19;
+int startMinute = 21; 
+
+int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on the first loop iteration
+
+
 
 // WARNING: Do NOT use any sort of LED stuff for troubleshooting on the esp32 wired up to the Ampel!
 // built-in LED on the other one is power only
@@ -77,6 +84,39 @@ void handleServer(void * parameter) {
 }
 
 
+//MARK: delayUntil
+// Delays until specified time, with optional buffer in seconds (don't use a buffer larger than 59 seconds. I could write some code handling this case, but this buffer is hardcoded and not accessible to the user, so dear reader... if you want a larger buffer, implement it yourself!).
+void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
+  time_t now;
+  struct tm* currentTime;
+
+  int targetSecond = 0; 
+
+  // Adjusts the target time if a buffer is specified
+  if (secondsBuffer > 0) {
+    targetSecond = 60 - secondsBuffer - 1; // not sure why, but it kept being off by one second, so I'm compensating for that here
+    if (targetMinute == 0) {
+      targetMinute = 59;
+      // still getting used to ternary operator. 
+      // targetHour is set to:(if targetHour is 0, set it to 23, otherwise set it to targetHour - 1)
+      targetHour = targetHour == 0 ? 23 : targetHour - 1; 
+    } else {
+      targetMinute -= 1;
+    }
+  }
+
+  do {
+    time(&now);
+    currentTime = localtime(&now);
+    Serial.println("Waiting for target time...");
+    delay(1000);
+  } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond));
+
+  startAtSpecificTime = false; // Reset the flag, so that the loop doesn't get stuck in this function
+
+  // Execution will continue here at the target time (or just use it to delay the loop)
+}
+
 //MARK: setup
 void setup() {
   
@@ -100,6 +140,19 @@ void setup() {
   serverSetup(); // this one starts the web server task, which handles all the OTA stuff
 
   delay(2000); 
+
+  // Configure NTP and sends first request for syncing the time (actually runs asynchronously in the background, handled by FreeRTOS?)
+  configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+  // Wait until time is actually updated
+  time_t now;
+  time(&now);
+  while (localtime(&now)->tm_year == 70 ) {
+    time(&now);
+    delay(1000); 
+  }
+
+  time(&now); 
+  Serial.println(ctime(&now)); // Print the current time to the serial monitor
 
 
 
@@ -133,12 +186,28 @@ void setup() {
   xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
   // xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 
+
+
+  //MARK: TESTING 
+  // put this here to show something when it first starts (because of the delayUntil testing)
+  dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); 
+
 }
 
 //MARK: loop
 void loop() {
   // can put stuff in here 
   // maybe remove the updateDisplay function and just put it in here
+
+  time_t now;
+  time(&now); 
+
+  if (startAtSpecificTime) {
+    delayUntil(startHour, startMinute); //MARK: FOR TESTING ONLY?
+    Serial.println("Starting new cycle of blinking at ");
+    time(&now);
+    Serial.println(ctime(&now));
+  }
 
   // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS?
   // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
