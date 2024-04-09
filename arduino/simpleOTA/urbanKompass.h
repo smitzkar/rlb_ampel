@@ -39,6 +39,12 @@ const uint8_t bike_vertical_mono[] PROGMEM = {
 void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long duration, int stepSize = 8) {
   for (int brightness = 255; brightness > 0; brightness -= stepSize) { // fade color from max to off
 
+    // One could create a proper formula for consistent-ish fps, but this'll do for now
+    // takes bigger steps for faster animations, because it's less noticeable and keeps computations down
+    if (duration <= 30) {
+      stepSize = 16;
+    }
+
     // Check if the command to stop the display has been received. If so, clear the display and return.
     // Isn't really used, yet. 
     if (stopDisplay) {
@@ -56,7 +62,7 @@ void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long duration,
     dma_display->drawFastVLine(56 + i, 0, 32, dma_display->color565(fadedR, fadedG, fadedB));
 
     // A bit of math to calculate the delay time for each step. 
-    int delayTime = duration / (255/stepSize);
+    int delayTime = duration / (256/stepSize);
     delay(delayTime);
   }
 }
