@@ -1,37 +1,58 @@
-// to actually start after upload, press the RESET button on esp32
-// remember to actually be on same network...
+/* Temporary notes
 
-// either access via IP or http://esp32.local/ (replace esp32 with whatever the host is set up as)
+remember to actually be on same network...
 
-// login for webserver in line: "if(form.userid.value=='admin' && form.pwd.value=='Rlb_Ampel<3')"
-// the password doesn't actually do any sort of login, it just leads to ../serverIndex page
+either access via IP or http://esp32.local/ (replace esp32 with whatever the host is set up as)
 
-// must ALWAYS include the OTA code when uploading new sketch, because it overwrites everything, so if it's not uploaded again, there's no more OTA functionality
-// to upload new sketch (remember to include OTA code):
-// arduinoIDE > sketch > export compiled binary
+login for webserver in line: "if(form.userid.value=='admin' && form.pwd.value=='Rlb_Ampel<3')"
+the password doesn't actually do any sort of login, it just leads to ../serverIndex page
+-> should figure out a way to actually do a login, but for now it keeps out the casual user
 
-// according to this https://www.reddit.com/r/esp32/comments/poogbr/better_explanation_for_vtaskdelay_freertos/ delay() on the esp32 actually wraps vTaskDelay. So... is nonblocking by default. 
+must ALWAYS include the OTA code when uploading new sketch, because it overwrites everything, so if it's not uploaded again, there's no more OTA functionality
+to upload new sketch (remember to include OTA code):
+arduinoIDE > sketch > export compiled binary
+
+
+*/
 
 #include <WiFi.h>
-#include <WebServer.h> // needs to be here for this part: WebServer server(80);
-#include "webpages.h" // needs quotation marks if in same directory
+#include <WebServer.h>  // needs to be here for this part: WebServer server(80);
+#include "webpages.h"   // needs quotation marks if in same directory
 #include "connectToWifi.h"
 #include "serverSetup.h"
-#include "urbanCompass.h"
-// #include "bitmaps.h"        // various preconfigured bitmaps
-// #include "iterateBitmaps.h" // functions to iterate over bitmaps
+#include "setupDisplay.h"
+#include "urbanKompass.h"
+#include "bitmaps.h"        // various preconfigured bitmaps (only include this once!)
+#include "iterateBitmaps.h" // functions to iterate over bitmaps
+#include "airlyBitmaps.h"
+#include "iterateAirlyBitmaps.h"
 
+/*
+Since I'm still struggling a bit with the FreeRTOS stuff: 
+> loop() as a Task: Treat loop() as a lower priority FreeRTOS task under the operating system's management.
+*/
 
 
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
-const char* host = "esp32";
-const char* ssid = "Karl";
-const char* password = "Rlb_KsESP";
+const char* host = "ampel";
+const char* ssid = "Rlb_Ampel";
+const char* password = "Rlb_Ampel<3";
 
-// adjust these according to the actual traffic light
-const unsigned long greenPhase = 120000;  // 2min
-const unsigned long redPhase = 30000;  // 30s
+bool stopDisplay = false; // used to interupt the display loop. Not currently being used
+
+
+// adjust these according to the actual traffic light (or let the web interface do it)
+int globalPhase1Length = 20; // in seconds
+int globalPhase2Length = 50;
+int globalTolerance = 3;
+int globalNtpUpdateInterval = 5; // in minutes
+int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 3 = airly, 4 = krueneWelle
+bool changedDisplayChoice = true; // to see if the display choice was changed during runtime. Is set true, because urbanKompass is the default
+bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
+bool startAtSpecificTime = false;
+int startHour = 0;
+int startMinute = 0;
 
 // WARNING: Do NOT use any sort of LED stuff for troubleshooting on the esp32 wired up to the Ampel!
 // built-in LED on the other one is power only
@@ -41,63 +62,34 @@ const unsigned long redPhase = 30000;  // 30s
 WebServer server(80);
 
 
-
+//MARK: handleServer
 // Basically the housekeeping function
 // moved to separate core to ensure that even if the wifi function is stuck, the display will still update
 void handleServer(void * parameter) {
   for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
 
     if (WiFi.status() != WL_CONNECTED) {   // check if WiFi is still connected, attempt to reconnect if so
-      // digitalWrite(led, false);
       connectToWiFiAndSetupMDNS(ssid, password, host);
     }
     server.handleClient();
-    delay(1);
+    delay(1); // was thinking of replacing this with vTaskDelay(), but ESP32 already uses FreeRTOS, so it's the same thing
   }
 }
 
 
-// The actual display update function
-// One core dedicated core should be enough
-// void updateDisplay(void * parameter) {
-//   for (;;) {
-
-//     // I am proboably overthinking this again. No one cares if the sync is off by a few milliseconds or even seconds
-
-//     // unsigned long t1 = millis();
-//     // // housekeeping function -> reset the traffic light every day at 00:00? 
-//     // // still needs a way to reset it daily -> Time / NTP
-//     // unsigned long housekeepingTime = millis() - t1;
-
-//     // // if housekeepingTime is longer than greenPhase + redPhase, then ... (let's pretend this won't happen for now)
-//     // // if housekeepingTime is longer than greenPhase, skip greenPhase and reduce redPhase by the time spent on housekeeping
-//     // // else, run greenPhase for greenPhase - housekeepingTime
-//     // unsigned long greenPhaseActual = 120000 - housekeepingTime;  // 2min - time spent on housekeeping
-    
-
-//     // run phase 1 
-
-//     // run phase 2 
-
-
-//     // only use one of these two functions for now!  
-//     // urbanCompassLoop();  // this is the actual display update function for the red/green 
-//     // iterateBitmapsLoop() // this is the actual display update function for the bitmaps
-
-
-//     delay(1); // do I need to accound for milliseconds? No! I'm overthinking again!
-//   }
-// }
-
-
+//MARK: setup
 void setup() {
   
-  // for troubleshooting
-  // pinMode(led,  OUTPUT);  
-  // digitalWrite(led, true);  
-  // delay(1000);  
-  // // digitalWrite(led, false);  
   Serial.begin(115200);   // for output to serial monitor
+
+   // Moved this from urbanKompass.h, because I think it only needs to run once and is required for all display options
+  /************** DISPLAY **************/
+  Serial.println("...Starting Display"); 
+  dma_display = new MatrixPanel_I2S_DMA(mxconfig); // I think it just grabs mxconfig from the setupDisplay.h file
+  dma_display->begin();
+  dma_display->setBrightness8(255); //0-255
+
+
 
   delay(2000); // added a bunch of delays to hopefully fix the display not starting properly
 
@@ -105,13 +97,35 @@ void setup() {
 
   delay(2000); 
 
-  serverSetup();          // this one starts the web server, which handles all the OTA stuff
+  serverSetup(); // this one starts the web server task, which handles all the OTA stuff
 
   delay(2000); 
 
-  // only use one of these two functions for now!
-  urbanCompassSetup();    // starts the display
-  // iterateBitmapsSetup();  // starts the display
+
+
+  // Hm... 
+  // This won't run if the choice is changed during runtime. 
+  // Need to do some more finagling.
+  // Might not actually need to run any setup function for these?
+  // switch (displayChoice) {
+  //   case 1:
+  //     urbanKompassSetup();
+  //     break;
+  //   case 2: 
+  //     iterateAirlyBitmapsLoop();
+  //     break;
+  //   case 3: 
+  //     iterateBitmapsLoop();
+  //     break;
+  //   case 4:
+  //     // krueneWelle();
+  //     Serial.println("Kruene Welle not implemented yet");
+  //     delay(5000);
+  //     break;
+  //   default:
+  //     Serial.println("Defaulting to Urban Kompass!");
+  //     urbanKompassSetup();
+  // } 
 
   delay(2000); 
 
@@ -119,22 +133,36 @@ void setup() {
   xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
   // xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 
-
-  // DO NOT USE THIS with the LED Matrix! -> half will be blue
-  // temp moved here for troubleshooting
-  // pinMode(LED_BUILTIN,  OUTPUT);  
-  // digitalWrite(LED_BUILTIN, true);  
-  // delay(1000);  
-  //digitalWrite(led, false);  
-
 }
 
-
+//MARK: loop
 void loop() {
   // can put stuff in here 
   // maybe remove the updateDisplay function and just put it in here
 
-  // only use one of these two functions for now!  
-  urbanCompassLoop();  // this is the actual display update function for the red/green 
-  // iterateBitmapsLoop() // this is the actual display update function for the bitmaps
+  // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS?
+  // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
+  // edit: no longer required, because I removed the setup functions
+  switch (displayChoice) {
+    case 1:
+      if (changedDisplayChoice) {
+        dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way
+        changedDisplayChoice = false;
+      }
+      urbanKompassLoop(); // I decided not to call it with parametres, it just uses global variables as set above
+      break;
+    case 2: 
+      iterateAirlyBitmapsLoop();
+      break;
+    case 3:
+      iterateBitmapsLoop();
+      break;
+    case 4:
+      // krueneWelle();
+      Serial.println("Kruene Welle not implemented yet");
+      delay(5000);
+      break;
+    default:
+      Serial.println("Make a choice!");
+  } 
 }

@@ -3,16 +3,114 @@
 
 // the OTA webupdater
 extern WebServer server;
+// other gloabl variables
+extern int globalPhase2Length; 
+extern int globalPhase1Length; 
+extern int globalTolerance; 
+extern int globalNtpUpdateInterval; 
+extern int displayChoice;
+extern bool changedDisplayChoice;
+extern bool animationDirection;
+extern bool startAtSpecificTime;
+extern int startHour;
+extern int startMinute;
+
+
+
+// "import" the html files from webpages.h
 extern const char* loginIndex;
-extern const char* serverIndex;
+extern const char* otaIndex;
+extern const char* additionIndex;
+extern const char* controlDisplayIndex;
+
 void serverSetup() {
+
+
+
+  // the login page
   server.on("/", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
     server.send(200, "text/html", loginIndex);
   });
-  server.on("/serverIndex", HTTP_GET, []() {
+
+
+  // the web interface for controlling the display
+  server.on("/controlDisplay", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
-    server.send(200, "text/html", serverIndex);
+    server.send(200, "text/html", controlDisplayIndex);
+  });
+  server.on("/getCurrentValues", HTTP_GET, []() {
+    // Create a JSON object with the current values
+    String json = "{";
+    json += "\"phase1Length\":" + String(globalPhase1Length) + ",";
+    json += "\"phase2Length\":" + String(globalPhase2Length) + ",";
+    json += "\"ntpUpdateInterval\":" + String(globalNtpUpdateInterval) + ",";
+    json += "\"tolerance\":" + String(globalTolerance) + ",";
+    json += "\"displayChoice\":" + String(displayChoice) + ",";
+    json += "\"animationDirection\":" + String(animationDirection);
+    json += "}";
+
+    // Send the JSON object back to the browser
+    server.send(200, "application/json", json);
+  });
+  server.on("/updateDisplayChoice", HTTP_GET, []() {
+    // Get the choice from the request
+    String choice = server.arg("choice");
+    
+    // Update global variable
+    displayChoice = choice.toInt();
+    changedDisplayChoice = true;
+
+    // for debugging (shouldn't need to call Serial.begin(..) again here, if it's in main file))
+    Serial.print("Display choice updated to: ");
+    Serial.println(displayChoice);
+    
+    // Send a response back to the browser
+    server.send(200, "text/plain", "Display choice updated successfully");
+  });
+    server.on("/updateDirection", HTTP_GET, []() {
+    // Get the choice from the request
+    String direction = server.arg("direction");
+    
+    // Update the global variable 
+    animationDirection = (direction == "true"); // this is a bit odd, but it basically checks if the string is "true" and then sets the variable to true, else false
+    
+    // Send a response back to the browser
+    server.send(200, "text/plain", "Animation direction updated successfully");
+  });
+server.on("/updateParameters", HTTP_GET, []() {
+  // Get the parameters from the request
+  String phase1Length = server.arg("phase1Length");
+  String phase2Length = server.arg("phase2Length");
+  String ntpUpdateInterval = server.arg("ntpUpdateInterval");
+  String tolerance = server.arg("tolerance");
+  String setTime = server.arg("setTime");
+
+  // Convert to int and store in the global variables
+  globalPhase1Length = phase1Length.toInt();
+  globalPhase2Length = phase2Length.toInt();
+  globalNtpUpdateInterval = ntpUpdateInterval.toInt();
+  globalTolerance = tolerance.toInt();
+
+  // Handle the setTime parameter
+  if (setTime == "") {
+    startAtSpecificTime = false;
+  } else {
+    startAtSpecificTime = true;
+    int colonPos = setTime.indexOf(':');
+    startHour = setTime.substring(0, colonPos).toInt();
+    startMinute = setTime.substring(colonPos + 1).toInt();
+  }
+  // Send a response back to the browser
+  server.send(200, "text/plain", "Parameters updated successfully");  
+});
+
+
+
+  // the OTA webupdater
+  server.on("/ota", HTTP_GET, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/html", otaIndex);
   });
   server.on("/update", HTTP_POST, []() {
     server.sendHeader("Connection", "close");
@@ -39,71 +137,26 @@ void serverSetup() {
   });
   // end of the OTA webupdater
 
+
   // my old addition code
   server.on("/addition", HTTP_GET, []() {
-      String html = R"rawliteral(
-      <!DOCTYPE html>
-      <html>
-      <body>
-        <!-- Adjusted HTML and JavaScript -->
-        <label for="num1">Number 1:</label>
-        <input type="text" id="num1" name="num1"><br><br>
-        <label for="num2">Number 2:</label>
-        <input type="text" id="num2" name="num2"><br><br>
-        <button onclick="sendNumbers()">Send Numbers</button>
-        <p>Sum: <span id="sum">0</span></p>
-
-        <script>
-        function sendNumbers() {
-          var num1 = document.getElementById("num1").value;
-          var num2 = document.getElementById("num2").value;
-          
-          // Send a GET request to the ESP32
-          var xhr = new XMLHttpRequest();
-          xhr.open("GET", "/calculate?num1=" + num1 + "&num2=" + num2, true);
-          xhr.send();
-          
-          xhr.onreadystatechange = function() {
-            if (this.readyState == 4 && this.status == 200) {
-              // Display the sum received from the ESP32
-              document.getElementById("sum").innerText = this.responseText;
-            }
-          };
-        }
-        </script>
-      </body>
-      </html>
-      )rawliteral";
-
-      server.send(200, "text/html", html);
-    });
-    server.on("/calculate", HTTP_GET, []() {
-      // Get the numbers from the request
-      String num1 = server.arg("num1");
-      String num2 = server.arg("num2");
-      
-      // Convert to float and calculate the sum
-      float number1 = num1.toFloat();
-      float number2 = num2.toFloat();
-      float sum = number1 + number2;
-      
-      // Send the sum back to the browser
-      server.send(200, "text/plain", String(sum));
-    });
-    // end of my old addition code
-
-    // led control code 
-    // DO NOT USE THIS WITH THE LED MATRIX! -> half will be blue
-    // server.on("/ledOn", HTTP_GET, []() {
-    //   digitalWrite(LED_BUILTIN, true); // Turn the LED on
-    //   server.send(200, "text/plain", "LED is ON");
-    //   Serial.println("LED turned ON");
-    // });
-    // server.on("/ledOff", HTTP_GET, []() {
-    //   digitalWrite(LED_BUILTIN, false); // Turn the LED off
-    //   server.send(200, "text/plain", "LED is OFF");
-    //   Serial.println("LED turned OFF");
-    // });
+      server.sendHeader("Connection", "close");
+      server.send(200, "text/html", additionIndex);
+  });
+  server.on("/calculate", HTTP_GET, []() {
+    // Get the numbers from the request
+    String num1 = server.arg("num1");
+    String num2 = server.arg("num2");
+    
+    // Convert to float and calculate the sum
+    float number1 = num1.toFloat();
+    float number2 = num2.toFloat();
+    float sum = number1 + number2;
+    
+    // Send the sum back to the browser
+    server.send(200, "text/plain", String(sum));
+  });
+  // end of my old addition code
 
 
   server.begin();

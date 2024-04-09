@@ -1,10 +1,10 @@
 // Contents: HTML code for the webpages
 // a bit of a mess, using std:string to handle easy concatenation, then conversion to char* for the WebServer
-
+// also has login and password in plain text xD (ToDO: maaybe change that before going live)
 
 #include <string>
 
-/* Style */
+/* MARK: Style */
 std::string style = R"(
 <style>
   #file-input, input {
@@ -59,6 +59,7 @@ std::string style = R"(
 )";
 
 /* Login page */
+// Obviously we should be using some proper login system, but this is enough to keep out the casual user
 std::string loginIndexStr = R"(
 <form name=loginForm>
 <h1>ESP32 Login</h1>
@@ -68,8 +69,8 @@ std::string loginIndexStr = R"(
 </form>
 <script>
   function check(form) {
-    if (form.userid.value=='admin' && form.pwd.value=='admin') {
-      window.open('/serverIndex');
+    if (form.userid.value=='rlbAdmin' && form.pwd.value=='rlbAdmin') {
+      window.open('/controlDisplay');
     } else {
       alert('Error Password or Username');
     }
@@ -78,9 +79,232 @@ std::string loginIndexStr = R"(
 )" + style;
 // convert to char* so that it can be used by the WebServer
 const char* loginIndex = loginIndexStr.c_str();
+
+
+/*MARK: Web Interace */
+std::string controlDisplayIndexStr = R"(
+<!-- 
+  the simple Webinterface
+
+  Page to choose between display options, control the Ampel, etc. 
+  (no access to underlying code here, so safe to play with)
+-->
+
+<!--MARK: html-->
+<div id='choice'>
+  <h1>Choose Display Option</h1>
+  <button id='btn1' onclick='updateDisplayChoice(1)'>Radflow</button>
+  <button id='btn2' onclick='updateDisplayChoice(2)'>Airly</button>
+  <button id='btn3' onclick='updateDisplayChoice(3)'>cycleImages</button>
+  <button id='btn4' onclick='updateDisplayChoice(4)'>Kruene Welle</button>
+</div>
+
+<div id='parameters'>
+
+  <br><br>
+  <button id='changeParameters?'>Want to change time parameters?</button>
+
+
+  <div id='timeParameters' style='display: none;'>
+    <h2>Enter parameters for Ampel-Schaltung</h2>
+    <label for='phase1Length'>Phase 1 Length (in seconds):</label>
+    <input type='text' id='phase1Length' name='phase1Length'><br><br>
+    <label for='phase2Length'>Phase 2 Length (in seconds):</label>
+    <input type='text' id='phase2Length' name='phase2Length'><br><br>
+    <label for='ntpUpdateInterval'>NTP Update Interval (in minutes):</label>
+    <input type='text' id='ntpUpdateInterval' name='ntpUpdateInterval'><br><br>
+    <label for='tolerance'>Tolerance (in seconds, 0-20):</label>
+    <input type='text' id='tolerance' name='tolerance'><br><br>
+  </div>
+
+  <br><br>
+
+
+  <label for='animationDirection'>Direction of animation (top down or bottom up)</label><br>
+  <button id='btnTopDown' onclick='updateDirection(false)'>Top Down</button>
+  <button id='btnBottomUp' onclick='updateDirection(true)'>Bottom Up</button><br><br>
+
+  <button id='setTimeButton'>Want to start at a specific time?</button><br><br>
+  <label for='setTime' id='setTimeLabel' style='display: none;'>Set specific time for when to start the cycle.</label>
+  <input type='time' id='setTime' name='setTime' value='00:00:00' style='display: none;'>
+
+  <button onclick='sendParameters()'>Send Parameters</button><span id='response'></span>
+</div>
+
+<style>
+  .active {
+  border: 2px solid green;
+  background-color: lightgreen;
+  }
+</style>
+
+
+<!--MARK: script-->
+<script>
+
+// Function to send the display choice
+function updateDisplayChoice(choice) {
+  // Send a GET request to the server with the choice as a parameter
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/updateDisplayChoice?choice=' + choice, true);
+  xhr.send();
+  
+  // Remove the 'active' class from all buttons
+  document.getElementById('btn1').classList.remove('active');
+  document.getElementById('btn2').classList.remove('active');
+  document.getElementById('btn3').classList.remove('active');
+  document.getElementById('btn4').classList.remove('active');
+
+  // Add the 'active' class to the clicked button
+  document.getElementById('btn' + choice).classList.add('active');
+
+  // Update the display of the 'parameters' div
+  updateParametersDisplay(choice);
+}
+
+// Function to send the direction choice
+function updateDirection(animationDirection) {
+  // Send a GET request to the server with the direction as a parameter
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/updateDirection?direction=' + animationDirection, true);
+  xhr.send();
+  
+  // Remove the 'active' class from all buttons
+  document.getElementById('btnTopDown').classList.remove('active');
+  document.getElementById('btnBottomUp').classList.remove('active');
+
+  // Add the 'active' class to the clicked button
+  if (animationDirection) {
+    document.getElementById('btnBottomUp').classList.add('active');
+  } else {
+    document.getElementById('btnTopDown').classList.add('active');
+  }
+}
+
+
+
+
+// Function to fetch the current values and pre-fill the input fields
+function fetchCurrentValues() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/getCurrentValues', true);
+  xhr.send();
+  
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log('Response from server:', this.responseText);
+      // Parse the response
+      var currentValues = JSON.parse(this.responseText);
+
+      // Pre-fill the input fields
+      document.getElementById('phase1Length').value = currentValues.phase1Length;
+      document.getElementById('phase2Length').value = currentValues.phase2Length;
+      document.getElementById('ntpUpdateInterval').value = currentValues.ntpUpdateInterval;
+      document.getElementById('tolerance').value = currentValues.tolerance;
+
+      // Remove the 'active' class from all buttons
+      document.getElementById('btn1').classList.remove('active');
+      document.getElementById('btn2').classList.remove('active');
+      document.getElementById('btn3').classList.remove('active');
+      document.getElementById('btn4').classList.remove('active');
+      document.getElementById('btnTopDown').classList.remove('active');
+      document.getElementById('btnBottomUp').classList.remove('active');
+  
+
+      // Add the 'active' class to the current choice button
+      document.getElementById('btn' + currentValues.displayChoice).classList.add('active');
+
+      // Add the 'active' class to the current direction button
+      if (currentValues.animationDirection) {
+        document.getElementById('btnBottomUp').classList.add('active');
+      } else {
+        document.getElementById('btnTopDown').classList.add('active');
+      }
+
+      // Update the display of the 'parameters' div
+      updateParametersDisplay(currentValues.displayChoice);
+    }
+  };
+}
+// Call the function when the page loads
+window.onload = fetchCurrentValues;
+
+// Function to update the display of the 'parameters' div
+function updateParametersDisplay(choice) {
+  // Hide the 'parameters' div if the 'Grüne Welle' button is not active
+  if (choice != 1) {
+    document.getElementById('parameters').style.display = 'none';
+  } else {
+    // Show the 'parameters' div if the 'Grüne Welle' button is active
+    document.getElementById('parameters').style.display = 'block';
+  }
+}
+
+// Add onclick event listener to the changeParameters? button to show or hide the first four input fields and their labels
+document.getElementById('changeParameters?').addEventListener('click', function() {
+
+  if (document.getElementById('timeParameters').style.display !== 'none') {
+    document.getElementById('timeParameters').style.display = 'none';
+    document.getElementById('changeParameters?').innerText = 'Want to change time parameters?';
+  } else {
+    document.getElementById('timeParameters').style.display = 'block'
+    document.getElementById('changeParameters?').innerText = 'Please close this if you don\'t want to change time parameters.';
+  }
+});
+
+// add onclick event listener to the setTime? button to show the time input field and label
+document.getElementById('setTimeButton').addEventListener('click', function() {
+  // Show the time input field and label when the button is clicked, or hide again
+  if (document.getElementById('setTime').style.display !== 'none') {
+    document.getElementById('setTime').style.display = 'none';
+    document.getElementById('setTimeLabel').style.display = 'none';
+    document.getElementById('setTimeButton').innerText = 'Want to start at a specific time?'; 
+  }
+  else {
+    document.getElementById('setTime').style.display = 'block';
+    document.getElementById('setTimeLabel').style.display = 'block';
+    document.getElementById('setTimeButton').innerText = 'Please close this if you don\'t want to set a specific time.';
+  }
+});
+
+// Function to send the parameters for the Ampel-Schaltung 
+function sendParameters() {
+  // clear the response field
+  document.getElementById('response').innerHTML = '';
+
+  var phase1Length = document.getElementById('phase1Length').value;
+  var phase2Length = document.getElementById('phase2Length').value;
+  var ntpUpdateInterval = document.getElementById('ntpUpdateInterval').value;
+  var tolerance = document.getElementById('tolerance').value;
+  
+  // Check if the time input field is visible
+  var setTime = '';
+  if (document.getElementById('setTime').style.display !== 'none') {
+    setTime = document.getElementById('setTime').value;
+  }
+  
+  // Send a GET request to the ESP32
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/updateParameters?phase1Length=' + phase1Length + '&phase2Length=' + phase2Length + '&ntpUpdateInterval=' + ntpUpdateInterval + '&tolerance=' + tolerance + (setTime ? '&setTime=' + setTime : ''), true);
+  xhr.send();
+  
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      // Handle the response from the ESP32
+      console.log(this.responseText);
+      document.getElementById('response').innerHTML = this.responseText; 
+    }
+  };
+}
+</script>
+)" + style;
+// convert to char* so that it can be used by the WebServer
+const char* controlDisplayIndex = controlDisplayIndexStr.c_str();
+
+
  
-/* Server Index Page */
-std::string serverIndexStr = R"(
+/* MARK: OTA update Page */
+std::string otaIndexStr = R"(
 <script src='https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js'></script>
 <form method='POST' action='#' enctype='multipart/form-data' id='upload_form'>
   <input type='file' name='update' id='file' onchange='sub(this)' style=display:none>
@@ -117,6 +341,8 @@ std::string serverIndexStr = R"(
         return xhr;
       },
       success:function(d, s) {
+        $('#prg').html('Success!');
+        $('#bar').css('width', '100%');
         console.log('success!') 
       },
       error: function (a, b, c) {
@@ -125,4 +351,38 @@ std::string serverIndexStr = R"(
   });
 </script>)" + style;
 // convert to char* so that it can be used by the WebServer
-const char* serverIndex = serverIndexStr.c_str();
+const char* otaIndex = otaIndexStr.c_str();
+
+
+
+
+// MARK: my old addition code
+std::string additionIndexStr = R"(
+<!-- Adjusted HTML and JavaScript -->
+<label for='num1'>Number 1:</label>
+<input type='text' id='num1' name='num1'><br><br>
+<label for='num2'>Number 2:</label>
+<input type='text' id='num2' name='num2'><br><br>
+<button onclick='sendNumbers()'>Send Numbers</button>
+<p>Sum: <span id='sum'>0</span></p>
+
+<script>
+function sendNumbers() {
+  var num1 = document.getElementById('num1').value;
+  var num2 = document.getElementById('num2').value;
+  
+  // Send a GET request to the ESP32
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/calculate?num1=' + num1 + '&num2=' + num2, true);
+  xhr.send();
+  
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      // Display the sum received from the ESP32
+      document.getElementById('sum').innerText = this.responseText;
+    }
+  };
+}
+</script>)" + style;
+// convert to char* so that it can be used by the WebServer
+const char* additionIndex = additionIndexStr.c_str();
