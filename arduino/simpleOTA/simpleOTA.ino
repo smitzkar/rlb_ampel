@@ -53,9 +53,9 @@ int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 3 = airly, 4 = k
 bool changedDisplayChoice = true; // to see if the display choice was changed during runtime. Is set true, because urbanKompass is the default
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
 bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
-bool startAtSpecificTime = true; // for testing purposes
+bool startAtSpecificTime = false; 
 int startHour = 19;
-int startMinute = 21; 
+int startMinute = 54; 
 
 int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on the first loop iteration
 
@@ -83,6 +83,36 @@ void handleServer(void * parameter) {
   }
 }
 
+
+//MARK: syncToMinute
+// Checks current offset from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
+int syncToMinute(int tolerance) {
+  time_t now;
+  time(&now);
+  struct tm* currentTime = localtime(&now);
+  int seconds = currentTime->tm_sec;
+
+  if (tolerance < seconds && seconds < (60 - tolerance)) {
+    // Calculate the remaining seconds until the next minute (can't remember why I went with 59 instead of 60))
+    int remainingSeconds = 59 - seconds;
+    Serial.print("Syncing to minute. Starting in:");
+    Serial.println(remainingSeconds);
+
+    // Delay for the remaining time
+    delay(remainingSeconds * 1000);
+    Serial.println("Synced to minute");
+    return 0;
+  }
+  // Could do this with ternary, but it's 2:55 am
+  else {
+    if (seconds <= 30){
+      return seconds;
+    }
+    else {
+      return 60 - seconds;
+    }
+  }
+}
 
 //MARK: delayUntil
 // Delays until specified time, with optional buffer in seconds (don't use a buffer larger than 59 seconds. I could write some code handling this case, but this buffer is hardcoded and not accessible to the user, so dear reader... if you want a larger buffer, implement it yourself!).
@@ -116,6 +146,12 @@ void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
 
   // Execution will continue here at the target time (or just use it to delay the loop)
 }
+
+
+
+
+
+
 
 //MARK: setup
 void setup() {
@@ -203,18 +239,11 @@ void loop() {
   time(&now); 
 
   // Update the time from the NTP server every ntpUpdateInterval minutes
-  if (localtime(&now)->tm_min % ntpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_min) {
+  if (localtime(&now)->tm_min % globalNtpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_min) {
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     lastNtpUpdate = localtime(&now)->tm_min;
     Serial.println(ctime(&now)); // Print the current time to the serial monitor
-    Serial.println("Blinks during last 5min: ");
-    Serial.println(blinks); // Print the number of blinks during the last 5 minutes
-    totalBlinks += blinks; // Add the number of blinks to the total
-    blinks = 0; // Reset the number of blinks
-    Serial.println("Total blinks: ");
-    Serial.println(totalBlinks); // Print the total number of blinks
-
-    syncToMinute(tolerance); // Delay until just before the start of the next full minute
+    // syncToMinute(globalTolerance); // Delay until just before the start of the next full minute
   }
 
   if (startAtSpecificTime) {
