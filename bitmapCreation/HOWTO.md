@@ -4,12 +4,15 @@
 ## easy solution  
 
 * 1. SAVE BITMAP AS 1BIT COLOUR in paint.net
-* 2. Run: bmp2hex.py -i -x <BITMAP FILE>
+* 2. Run: bmp2hex.py -i <BITMAP FILE>
 * 3. Copy paste output into sketch.
 
 ## without paint.net (not available for macOS...)
 
-hm... don't use this yet. bmp2hex.py creates a much bigger object. need to fiddle with parameters. 
+### using Gimp: 
+image > mode > indexed : black and white 1 bit, then export as bmp 
+
+### using python script: 
 
 * 1. create png via pixelart creator of choice
 * 2. run: python png-to-bmp.py (will tell you what to do)
