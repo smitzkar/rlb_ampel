@@ -27,6 +27,7 @@ arduinoIDE > sketch > export compiled binary
 #include "iterateBitmaps.h" // functions to iterate over bitmaps
 #include "airlyBitmaps.h"
 #include "iterateAirlyBitmaps.h"
+#include "krueneWelle.h"
 
 /*
 Since I'm still struggling a bit with the FreeRTOS stuff: 
@@ -49,7 +50,7 @@ int globalPhase1Length = 20; // in seconds
 int globalPhase2Length = 50;
 int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
-int displayChoice = 1; // 1 = urbanKompass, 2 = iterateBitmaps, 3 = airly, 4 = krueneWelle
+int displayChoice = 2; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle
 bool changedDisplayChoice = true; // to see if the display choice was changed during runtime. Is set true, because urbanKompass is the default
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
 bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
@@ -256,6 +257,7 @@ void loop() {
   // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS?
   // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
   // edit: no longer required, because I removed the setup functions
+  dma_display->clearScreen(); // tabula rasa
   switch (displayChoice) {
     case 1:
       if (changedDisplayChoice) {
@@ -273,9 +275,11 @@ void loop() {
     case 4:
       // krueneWelle();
       Serial.println("Kruene Welle not implemented yet");
+      dma_display->drawBitmap(32, 0, NUMBERS_bits, 32, 32, dma_display->color565(255,255,255)); 
       delay(5000);
       break;
     default:
       Serial.println("Make a choice!");
+      urbanKompassLoop(); // default
   } 
 }
