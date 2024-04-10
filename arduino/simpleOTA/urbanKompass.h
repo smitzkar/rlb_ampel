@@ -63,6 +63,8 @@ void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long duration,
 
     // A bit of math to calculate the delay time for each step. 
     int delayTime = duration / (256/stepSize);
+    // Serial.print("delayTime:");
+    // Serial.println(delayTime);
     delay(delayTime);
   }
 }
@@ -70,7 +72,6 @@ void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long duration,
 // Call this with the RGB values and the number of rows to draw and fade.
 // The duration is the total time it should take to fade the rectangle (in seconds).
 int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long duration) {
-  dma_display->fillRect(56, 0, 73, 32, dma_display->color565(r, g, b)); //draw full rectangle
 
   //MARK: TODO: add this once syncToMinute is implemented
   // if (duration == fastBlinkDuration) {
@@ -89,7 +90,9 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long duratio
   duration *= 1000; // remove this line if the above code is uncommented
 
   unsigned long startTime = millis();
-  unsigned long fadeRowTime = duration / rows; // calculate the time for each row to fade
+  unsigned long fadeRowTime = duration * 1.0 / rows; // calculate the time for each row to fade. needs to be cast to float to avoid integer division (and truncating decimals)
+
+  dma_display->fillRect(56, 0, 73, 32, dma_display->color565(r, g, b)); //draw full rectangle
 
   // Splitting it up into two parts, so I can continually adjust the time and avoid overflow, even if execution time is different than expected. Really, I only want this for the 2nd phase, but it doesn't hurt to have it for the first phase as well and lets me use the same function for both phases.
   int partARows = 4 * rows / 5; // 80% of the rows using integer division
@@ -108,10 +111,15 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long duratio
     }
   }
 
+  Serial.print("A fadeRowTime:");
+  Serial.println(fadeRowTime);
   // calculate how long it took and how much time is left
   unsigned long endOfA = millis();
   unsigned long runtimeA = endOfA - startTime;
-  fadeRowTime = (duration - runtimeA) / partBRows; // adjust accordingly for the remaining rows
+  fadeRowTime = (duration - runtimeA) * 1.0 / partBRows; // adjust accordingly for the remaining rows
+  Serial.print("B fadeRowTime:");
+  Serial.println(fadeRowTime);
+
 
   // remaining 20% of rows
   if (!animationDirection) { // Top-down animation
@@ -131,6 +139,9 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long duratio
 
 //MARK: loop
 void urbanKompassLoop() {
+
+  // keep this here or not?
+  dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // draw bike pictogram
 
   size_t rows = 73; // number of rows
   drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green
