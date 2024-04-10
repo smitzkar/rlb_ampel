@@ -50,7 +50,7 @@ int globalPhase1Length = 20; // in seconds
 int globalPhase2Length = 50;
 int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
-int displayChoice = 2; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle
+int displayChoice = 4; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
 bool changedDisplayChoice = true; // to see if the display choice was changed during runtime. Is set true, because urbanKompass is the default
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
 bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
@@ -274,8 +274,13 @@ void loop() {
       break;
     case 4:
       // krueneWelle();
-      Serial.println("Kruene Welle not implemented yet");
-      dma_display->drawBitmap(32, 0, NUMBERS_bits, 32, 32, dma_display->color565(255,255,255)); 
+      dma_display->drawBitmap(33, 0, NUMBERS_bits, 96, 32, dma_display->color565(255,255,255)); // to show the full display, it needs to start at 32+1 ("phantom" 1st half of 64x32 matrix)
+      //dma_display->drawPixel(33, 1, dma_display->color565(0,255,255)); // direct pixel control
+      fillRect(33, 5, 5, 5, dma_display->color565(0,255,0)); // from krueneWelle.h
+      fillRect(39, 5, 5, 5, dma_display->color565(20,0,0)); // from krueneWelle.h
+      delay(5000);
+      fillRect(33, 5, 5, 5, dma_display->color565(0,20,0)); // from krueneWelle.h
+      fillRect(39, 5, 5, 5, dma_display->color565(255,0,0)); // from krueneWelle.h
       delay(5000);
       break;
     default:
