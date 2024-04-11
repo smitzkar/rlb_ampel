@@ -36,12 +36,15 @@ const uint8_t bike_vertical_mono[] PROGMEM = {
 
 //MARK: helper functions
 // New helper function to fade the rows
-void fadeRow(int r, int g, int b, size_t i, size_t rows, unsigned long duration, int stepSize = 8) {
+
+// This function fades a single row from the given color to black over duration in milliseconds.
+void fadeRow(int r, int g, int b, size_t i, size_t rows, float duration, int stepSize = 8) {
   for (int brightness = 255; brightness > 0; brightness -= stepSize) { // fade color from max to off
 
     // One could create a proper formula for consistent-ish fps, but this'll do for now
     // takes bigger steps for faster animations, because it's less noticeable and keeps computations down
-    if (duration <= 30) {
+    // current values: 20s and 73 rows (using 80/20 split)
+    if (duration <= 400) {
       stepSize = 16;
     }
 
@@ -82,31 +85,63 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long duratio
   // time(&now);
   // // Serial.println(ctime(&now));
 
-  // duration = (duration - offset); // account for offset (only for fast blink, as it's the first one)
+  // duration = (duration * 1000  - offset); // account for offset (only for fast blink, as it's the first one)
+  // }
+  // else {
+  // duration *= 1000; // convert to milliseconds
   // }
 
+  // remove this if the above is implemented
+  duration *= 1000; // convert to milliseconds
+
   unsigned long startTime = millis();
-  unsigned long fadeRowTime = duration * 1000.0 / rows; // calculate the time for each row to fade in seconds. needs to be cast to float to avoid integer division (and truncating decimals)
-  Serial.print("fadeRowTime:");
-  Serial.println(fadeRowTime);
-  Serial.print("Expected runtime:");
-  Serial.println(fadeRowTime * rows);
+  float fadeRowTime = duration * 1.0 / rows; // calculate the time for each row to fade. needs to be cast to float to avoid integer division (and truncating decimals)
+  // this NEEDS to NOT be unsigned long, as that's an integer and we want to keep the decimals!
 
   dma_display->fillRect(55, 0, 73, 32, dma_display->color565(r, g, b)); //draw full rectangle
 
+  // Splitting it up into two parts, so I can continually adjust the time and avoid overflow, even if execution time is different than expected. Really, I only want this for the 2nd phase, but it doesn't hurt to have it for the first phase as well and lets me use the same function for both phases.
+  int partARows = 4 * rows / 5; // 80% of the rows using integer division
+  int partBRows = rows - partARows; // the remaining 20% of the rows
+
+
+  //MARK: TODO: handle the animation direction oddness
+
+  // first 80% of rows  
   if (!animationDirection) { // Top-down animation
-    for (size_t i = 0; i < rows; i++) {
-      fadeRow(r, g, b, i, rows, fadeRowTime);
+    for (size_t i = 0; i < partARows; i++) {
+      fadeRow(r, g, b, i, partARows, fadeRowTime);
     }
   } else { // Bottom-up animation
-    for (size_t i = rows; i > 0; i--) {
-      fadeRow(r, g, b, i - 1, rows, fadeRowTime);
+    for (size_t i = partARows; i > 0; i--) {
+      fadeRow(r, g, b, i - 1, partARows, fadeRowTime);
+    }
+  }
+
+  Serial.print("A fadeRowTime:");
+  Serial.println(fadeRowTime);
+  // calculate how long it took and how much time is left
+  unsigned long endOfA = millis();
+  unsigned long runtimeA = endOfA - startTime;
+  fadeRowTime = (duration - runtimeA) * 1.0 / partBRows; // adjust accordingly for the remaining rows
+  Serial.print("B fadeRowTime:");
+  Serial.println(fadeRowTime);
+
+
+  // remaining 20% of rows
+  if (!animationDirection) { // Top-down animation
+    for (size_t i = partARows; i < rows; i++) {
+      fadeRow(r, g, b, i, partBRows, fadeRowTime);
+    }
+  } else { // Bottom-up animation
+    for (size_t i = rows; i > partARows; i--) {
+      fadeRow(r, g, b, i - 1, partBRows, fadeRowTime);
     }
   }
 
   Serial.print("Phase runtime:");
   Serial.println(millis() - startTime);
-  return millis() - startTime; // return the total runtime of the function for offset calculation
+  return millis() - startTime; // return the total runtime of the function
 }
 
 //MARK: loop
@@ -117,7 +152,7 @@ void urbanKompassLoop() {
 
   size_t rows = 73; // number of rows
   drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green
-  if (stopDisplay) return; // needs to be "return" if this isn't actual loop
+  if (stopDisplay) return; // needs to be return if this isn't main loop
   drawAndFadeRectangle(255, 0, 0, rows, globalPhase2Length); // for red
 }
 
