@@ -13,7 +13,9 @@ void setup() {
 void loop() {
   Serial.println("Hello World");
   // put your main code here, to run repeatedly:
-  size_t rows = 74; // number of rows
+  size_t rows = 74; // number of rows 
+  // at 74 rows, at optimal runtime it will have 292ms buffer per cycle
+  // if not enough, at 73: 1234ms 
   drawAndFadeRectangle(rows, 20); // for green
   drawAndFadeRectangle(rows, 50); // for red
 }
@@ -21,9 +23,10 @@ void loop() {
 
 void fadeRow(float duration, int stepSize = 8 ) {
 
-  stepSize = 12; // for 21 steps for 50s -> 31fps
+  // I definitely over-optimised this...
+  stepSize = 12; // for 21 steps for 50s at 74 rows -> 31fps
   if (duration < 300) {
-    stepSize = 28; // for 9 steps for 20s -> 30fps
+    stepSize = 28; // for 9 steps for 20s at 74 rows -> 30fps
   }
   
 
