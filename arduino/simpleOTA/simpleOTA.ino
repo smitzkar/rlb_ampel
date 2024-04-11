@@ -268,6 +268,9 @@ void loop() {
       break;
     case 2: 
       iterateAirlyBitmapsLoop();
+      // for displays: can use 
+      // void setRotation(uint8_t rotation);
+      // to set the rotation of the display -> set it once to handle the current oddness!
       break;
     case 3:
       iterateBitmapsLoop();
