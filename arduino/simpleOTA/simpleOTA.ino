@@ -50,7 +50,7 @@ int globalPhase1Length = 20; // in seconds
 int globalPhase2Length = 50;
 int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
-int displayChoice = 4; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
+int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
 bool changedDisplayChoice = true; // to see if the display choice was changed during runtime. Is set true, because urbanKompass is the default
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
 bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
@@ -122,6 +122,8 @@ void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
   struct tm* currentTime;
 
   int targetSecond = 0; 
+
+  secondsBuffer = secondsBuffer > 59 ? 59 : secondsBuffer; // Just in case someone tries to use a buffer larger than 59 seconds
 
   // Adjusts the target time if a buffer is specified
   if (secondsBuffer > 0) {
@@ -233,7 +235,6 @@ void setup() {
 
 //MARK: loop
 void loop() {
-  // can put stuff in here 
   // maybe remove the updateDisplay function and just put it in here
 
   time_t now;

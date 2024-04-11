@@ -107,7 +107,8 @@ unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
   }
 
   unsigned long startTime = millis();
-  unsigned long blinkInterval = duration / numberOfBlinks; // calculate the interval between each blink
+  unsigned long blinkInterval = duration / numberOfBlinks; // calculate the interval between each blink. 
+  // this should NOT be unsigned long, for anything that isn't neatly divisible by the number of blinks, it will be rounded down to 0
 
   // Splitting it up into two parts, so I can continually adjust the blink interval and avoid overflow, even if execution time is different than expected. Really, I only want this for the 2nd phase, but it doesn't hurt to have it for the first phase as well and lets me use the same function for both phases.
   int a = 4 * numberOfBlinks / 5; // 80% of the blinks using integer division
