@@ -31,7 +31,6 @@ void loop() {
   fillRect(39, 5, 5, 5, dma_display->color565(255,0,0)); // from krueneWelle.h
   delay(5000);
 
-  dma_display-> clearScreen();
 
 }
 
