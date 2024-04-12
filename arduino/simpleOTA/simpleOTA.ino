@@ -46,14 +46,14 @@ const int   daylightOffset_sec = 3600;  // Offset for daylight saving time in se
 
 
 // adjust these according to the actual traffic light (or let the web interface do it)
-int globalPhase1Length = 20; // in seconds
-int globalPhase2Length = 50;
+int globalPhase1Length = 24; // in seconds
+int globalPhase2Length = 46;
 int globalTolerance = 3;
 int globalNtpUpdateInterval = 5; // in minutes
 int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
-bool changedDisplayChoice = true; // to see if the display choice was changed during runtime. Is set true, because urbanKompass is the default
+bool changedDisplayChoice = false; // to see if the display choice was changed during runtime
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
-bool animationDirection = false; // default is the original top down. using a boolean to keep it simple
+bool animationDirection = false; // false is the original top down. using a boolean to keep it simple
 bool startAtSpecificTime = false; 
 int startHour = 19;
 int startMinute = 54; 
@@ -168,17 +168,9 @@ void setup() {
   dma_display->begin();
   dma_display->setBrightness8(255); //0-255
 
-
-
-  delay(2000); // added a bunch of delays to hopefully fix the display not starting properly
-
+  // removed a bunch of delay(2000) here, let's see if it still works
   connectToWiFiAndSetupMDNS(ssid, password, host);   // initial connection to wifi and sets alternative IP -> http://"host".local
-
-  delay(2000); 
-
   serverSetup(); // this one starts the web server task, which handles all the OTA stuff
-
-  delay(2000); 
 
   // Configure NTP and sends first request for syncing the time (actually runs asynchronously in the background, handled by FreeRTOS?)
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -241,6 +233,7 @@ void loop() {
   time(&now); 
 
   // Update the time from the NTP server every ntpUpdateInterval minutes
+  // MOVE THIS INTO handleServer
   if (localtime(&now)->tm_min % globalNtpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_min) {
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     lastNtpUpdate = localtime(&now)->tm_min;
@@ -278,7 +271,7 @@ void loop() {
       break;
     case 4:
       // krueneWelle();
-      dma_display->drawBitmap(32, 0, NUMBERS_bits, 96, 32, dma_display->color565(255,255,255)); // to show the full display, it needs to start at 32+1 ("phantom" 1st half of 64x32 matrix)
+      dma_display->drawBitmap(32, 0, NUMBERS_bits, 96, 32, dma_display->color565(255,255,255)); // to show the full display, it needs to start at 32+1 ("phantom" 1st half of 64x32 matrix) -> but index 0 is the first pixel, so it's actually 32?
       // shouldn't it be 32? pixel coordinates start 0,0 
       //dma_display->drawPixel(33, 1, dma_display->color565(0,255,255)); // direct pixel control
       fillRect(33, 5, 5, 5, dma_display->color565(0,255,0)); // from krueneWelle.h
