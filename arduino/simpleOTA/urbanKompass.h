@@ -38,11 +38,16 @@ const uint8_t bike_vertical_mono[] PROGMEM = {
 // New helper function to fade the rows
 
 // This function fades a single row from the given color to black over duration in milliseconds and adjusts the number of iterations to a target fps (default 30).
-void fadeRow(int r, int g, int b, int i, float duration, int targetFps = 30) {
+void fadeRow(int r, int g, int b, int i, float fadeRowTime, int targetFps = 30) {
 
-  int iterations = 1 + static_cast<int>(targetFps * duration/1000); // a bit complicated, but it's just to round up to the nearest integer, to ensure fps is >= targetFps
+  int fadeSteps = 1 + static_cast<int>(targetFps * fadeRowTime/1000); // a bit complicated, but it's just to round up to the nearest integer, to ensure fps is >= targetFps
+  float accumulatedError = 0; // to keep track of the error in converting delayTime to int
+  // we could put this in the outer loop, but worst case, we're off by 1ms per row
 
-  for (int j = 1; j <= iterations; j++) {
+  // Serial.print("fadeSteps: ");
+  // Serial.println(fadeSteps);
+
+  for (int j = 1; j <= fadeSteps; j++) {
 
     // Check if the command to stop the display has been received. If so, clear the display and return. I placed it here, so that it would be as responsible as possible.
     // Isn't really used, yet. 
@@ -51,14 +56,21 @@ void fadeRow(int r, int g, int b, int i, float duration, int targetFps = 30) {
       return;
     }
 
-    int fadedR = (iterations - j) * r / iterations; // order of operations is crucial here, to make proper use of integer division
-    int fadedG = (iterations - j) * g / iterations;
-    int fadedB = (iterations - j) * b / iterations;
+    int fadedR = (fadeSteps - j) * r / fadeSteps; // order of operations is crucial here, to make proper use of integer division
+    int fadedG = (fadeSteps - j) * g / fadeSteps;
+    int fadedB = (fadeSteps - j) * b / fadeSteps;
 
     dma_display->drawFastVLine(55 + i, 0, 32, dma_display->color565(fadedR, fadedG, fadedB));
 
     // A bit of math to calculate the delay time for each step. 
-    int delayTime = duration / iterations;
+    // delay() only accepts integers, so we need to round the float to the nearest integer. To account for the accumulation of the truncated decimals, we keep track of that error and add it to the next delay once it reaches a full millisecond.
+    float delayTime_float = fadeRowTime / fadeSteps;
+    int delayTime = static_cast<int>(delayTime_float);
+    accumulatedError += delayTime_float - delayTime; // accumulate the error
+    if (accumulatedError >= 1) {  // if the error is larger than 1 (ms), we
+      delayTime++;                // add it to the next delay
+      accumulatedError--;         // and subtract 1 from the error
+    }
     delay(delayTime);
   }
 }
@@ -102,7 +114,7 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
     }
   } else { // Bottom-up animation
     for (size_t i = rows; i > 0; i--) {
-      fadeRow(r, g, b, i - 1, fadeRowTime); // why -1 again?
+      fadeRow(r, g, b, i - 1, fadeRowTime); 
     }
   }
 
