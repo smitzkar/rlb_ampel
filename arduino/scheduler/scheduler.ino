@@ -41,7 +41,7 @@ int startMinute = 25;
 
 
 //MARK: syncToMinute
-// Checks current offset from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
+// Checks current offset (in seconds) from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
 int syncToMinute(int tolerance) {
   time_t now;
   time(&now);
@@ -226,6 +226,8 @@ void loop()
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     lastNtpUpdate = localtime(&now)->tm_min;
     Serial.println(ctime(&now)); // Print the current time to the serial monitor
+
+    // monitor blinks for debugging
     Serial.println("Blinks during last 5min: ");
     Serial.println(blinks); // Print the number of blinks during the last 5 minutes
     totalBlinks += blinks; // Add the number of blinks to the total
