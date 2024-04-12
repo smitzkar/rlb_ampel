@@ -23,6 +23,10 @@ void loop() {
 
 void fadeRow(float duration, int stepSize = 8 ) {
 
+
+  // 2024-04-12 01:54 - Why did I spend so much time on this? The iterator doesn't HAVE to be in any way connected to brightness levels at all. It was just convenient at the time...
+
+  
   // I definitely over-optimised this...
   stepSize = 12; // for 21 steps for 50s at 74 rows -> 31fps
   if (duration < 300) {
