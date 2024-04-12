@@ -41,7 +41,7 @@ int startMinute = 25;
 
 
 //MARK: syncToMinute
-// Checks current offset from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
+// Checks current offset (in seconds) from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
 int syncToMinute(int tolerance) {
   time_t now;
   time(&now);
@@ -107,7 +107,8 @@ unsigned long blinkControl(int numberOfBlinks, unsigned long duration) {
   }
 
   unsigned long startTime = millis();
-  unsigned long blinkInterval = duration / numberOfBlinks; // calculate the interval between each blink
+  unsigned long blinkInterval = duration / numberOfBlinks; // calculate the interval between each blink. 
+  // this should NOT be unsigned long, for anything that isn't neatly divisible by the number of blinks, it will be rounded down to 0
 
   // Splitting it up into two parts, so I can continually adjust the blink interval and avoid overflow, even if execution time is different than expected. Really, I only want this for the 2nd phase, but it doesn't hurt to have it for the first phase as well and lets me use the same function for both phases.
   int a = 4 * numberOfBlinks / 5; // 80% of the blinks using integer division
@@ -225,6 +226,8 @@ void loop()
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     lastNtpUpdate = localtime(&now)->tm_min;
     Serial.println(ctime(&now)); // Print the current time to the serial monitor
+
+    // monitor blinks for debugging
     Serial.println("Blinks during last 5min: ");
     Serial.println(blinks); // Print the number of blinks during the last 5 minutes
     totalBlinks += blinks; // Add the number of blinks to the total

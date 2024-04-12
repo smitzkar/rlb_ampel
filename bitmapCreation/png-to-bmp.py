@@ -6,7 +6,7 @@
 # /* Alternatively (from urbanCompass):
 #  *
 #  * 1. SAVE BITMAP AS 1BIT COLOUR in paint.net
-#  * 2. Run: bmp2hex.py -i -x <BITMAP FILE>
+#  * 2. Run: bmp2hex.py -i <BITMAP FILE> // don't use -x as written in urbanCompass readme
 #  * 3. Copy paste output into sketch.
 #  * 
 
@@ -16,6 +16,7 @@ from PIL import Image
 # Get user input for filenames
 png_filename_input = input("Enter the name of your png: ")
 bmp_filename_input = input("Enter the name of the new bmp: ")
+to_be_rotated = input("Do you want to rotate the image 90°? (y/n): ")
 
 # Remove file extension if present
 png_filename = os.path.splitext(png_filename_input)[0] + '.png'
@@ -29,7 +30,12 @@ if not os.path.dirname(bmp_filename):
 
 # Open the image file
 image = Image.open(png_filename)
+if to_be_rotated == 'y':
+    image = image.rotate(90, expand=True)
+image = image.convert('L')  # Convert image to grayscale
+image = image.point(lambda x: 0 if x<128 else 255, '1')  # Apply threshold and convert to 1-bit bitmap
+
 # Save it as a BMP
 image.save(bmp_filename, format="BMP")
 
-print("PNG converted to BMP successfully!")
+print("PNG converted to 1-bit BMP successfully!")

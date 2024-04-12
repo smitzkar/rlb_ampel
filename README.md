@@ -1,6 +1,20 @@
 # NOTES FOR SMITZKAR 
 (not a proper README, yet)
 
+# 2024-04-11 
+
+update: lots of work, lots of progress! everything works. 
+
+now I just do some fine tuning, adapt it to the funky real traffic lights schedule (not both pedestrian lights are timed the same!), might also simplify he timing function - the current one is too complicated, too annoying to adapt, we don't really need the precision - , and spend some of my free time on building more ambitious display options from scratch.  
+Oh and I need to still figure out the final power supply. Current solution is to simply power the esp32 via its own power bank, so that it and the led matrices don't interfere with each other. 
+
+really helpful: https://learn.adafruit.com/adafruit-gfx-graphics-library/graphics-primitives 
+
+notes are on tablet (to be cleaned up and transferred here)  
+other notes in git commits and commented code  
+should probably also create a pull request to update the urbanCompass documentation on GitHub. Some glaring mistakes/things they probably forgot to update.  
+I'm wondering if I should clean it up properly and make the code more adaptable, so that others can reuse it. Then again, if anyone wanted to use it, I would tell them to not do it like we did, but to actually (minimally) change the hardware and go with MicroPython, instead. I regret not asking for a little bit of budget and investing the time upfront to port everything over at the very start (as I had initially planned to do). It would enable MUCH faster development and be a lot more accessible to potential future users. 
+
 
 # 2024-03-21 PLAN MOVING FORWARD  
 
