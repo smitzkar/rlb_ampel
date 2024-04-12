@@ -37,44 +37,35 @@ const uint8_t bike_vertical_mono[] PROGMEM = {
 //MARK: helper functions
 // New helper function to fade the rows
 
-// This function fades a single row from the given color to black over duration in milliseconds.
-void fadeRow(int r, int g, int b, size_t i, size_t rows, float duration, int stepSize = 8) {
-  for (int brightness = 255; brightness > 0; brightness -= stepSize) { // fade color from max to off
+// This function fades a single row from the given color to black over duration in milliseconds and adjusts the number of iterations to a target fps (default 30).
+void fadeRow(int r, int g, int b, int i, float duration, int targetFps = 30) {
 
-    // One could create a proper formula for consistent-ish fps, but this'll do for now
-    // takes bigger steps for faster animations, because it's less noticeable and keeps computations down
-    // current values: 20s and 73 rows (using 80/20 split)
-    if (duration <= 400) {
-      stepSize = 16;
-    }
+  int iterations = 1 + static_cast<int>(targetFps * duration/1000); // a bit complicated, but it's just to round up to the nearest integer, to ensure fps is >= targetFps
 
-    // Check if the command to stop the display has been received. If so, clear the display and return.
+  for (int j = 1; j <= iterations; j++) {
+
+    // Check if the command to stop the display has been received. If so, clear the display and return. I placed it here, so that it would be as responsible as possible.
     // Isn't really used, yet. 
     if (stopDisplay) {
       dma_display->fillScreen(0); 
       return;
     }
 
-    // It's hideous, but I'll let the compiler handle it. Should probably modulo this. 
-    int fadedR = (r * brightness) / 255;
-    if (fadedR < stepSize) fadedR = 0;
-    int fadedG = (g * brightness) / 255;
-    if (fadedG < stepSize) fadedG = 0; 
-    int fadedB = (b * brightness) / 255;
-    if (fadedB < stepSize) fadedB = 0;
+    int fadedR = (iterations - j) * r / iterations; // order of operations is crucial here, to make proper use of integer division
+    int fadedG = (iterations - j) * g / iterations;
+    int fadedB = (iterations - j) * b / iterations;
+
     dma_display->drawFastVLine(55 + i, 0, 32, dma_display->color565(fadedR, fadedG, fadedB));
 
     // A bit of math to calculate the delay time for each step. 
-    int delayTime = duration / (256/stepSize);
-    // Serial.print("delayTime:");
-    // Serial.println(delayTime);
+    int delayTime = duration / iterations;
     delay(delayTime);
   }
 }
 
 // Call this with the RGB values and the number of rows to draw and fade.
 // The duration is the total time it should take to fade the rectangle (in seconds).
-int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long duration) {
+int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration) {
 
   //MARK: TODO: add this once syncToMinute is implemented
   // if (duration == fastBlinkDuration) {
@@ -98,44 +89,20 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned long duratio
   float fadeRowTime = duration * 1.0 / rows; // calculate the time for each row to fade. needs to be cast to float to avoid integer division (and truncating decimals)
   // this NEEDS to NOT be unsigned long, as that's an integer and we want to keep the decimals!
 
+  // Serial.print("Fade row time:");
+  // Serial.println(fadeRowTime);
+
   dma_display->fillRect(55, 0, 73, 32, dma_display->color565(r, g, b)); //draw full rectangle
-
-  // Splitting it up into two parts, so I can continually adjust the time and avoid overflow, even if execution time is different than expected. Really, I only want this for the 2nd phase, but it doesn't hurt to have it for the first phase as well and lets me use the same function for both phases.
-  int partARows = 4 * rows / 5; // 80% of the rows using integer division
-  int partBRows = rows - partARows; // the remaining 20% of the rows
-
 
   //MARK: TODO: handle the animation direction oddness
 
-  // first 80% of rows  
   if (!animationDirection) { // Top-down animation
-    for (size_t i = 0; i < partARows; i++) {
-      fadeRow(r, g, b, i, partARows, fadeRowTime);
+    for (size_t i = 0; i < rows; i++) {
+      fadeRow(r, g, b, i, fadeRowTime);
     }
   } else { // Bottom-up animation
-    for (size_t i = partARows; i > 0; i--) {
-      fadeRow(r, g, b, i - 1, partARows, fadeRowTime);
-    }
-  }
-
-  Serial.print("A fadeRowTime:");
-  Serial.println(fadeRowTime);
-  // calculate how long it took and how much time is left
-  unsigned long endOfA = millis();
-  unsigned long runtimeA = endOfA - startTime;
-  fadeRowTime = (duration - runtimeA) * 1.0 / partBRows; // adjust accordingly for the remaining rows
-  Serial.print("B fadeRowTime:");
-  Serial.println(fadeRowTime);
-
-
-  // remaining 20% of rows
-  if (!animationDirection) { // Top-down animation
-    for (size_t i = partARows; i < rows; i++) {
-      fadeRow(r, g, b, i, partBRows, fadeRowTime);
-    }
-  } else { // Bottom-up animation
-    for (size_t i = rows; i > partARows; i--) {
-      fadeRow(r, g, b, i - 1, partBRows, fadeRowTime);
+    for (size_t i = rows; i > 0; i--) {
+      fadeRow(r, g, b, i - 1, fadeRowTime); // why -1 again?
     }
   }
 
@@ -150,7 +117,7 @@ void urbanKompassLoop() {
   // keep this here or not?
   dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // draw bike pictogram
 
-  size_t rows = 73; // number of rows
+  size_t rows = 74; // number of rows
   drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green
   if (stopDisplay) return; // needs to be return if this isn't main loop
   drawAndFadeRectangle(255, 0, 0, rows, globalPhase2Length); // for red

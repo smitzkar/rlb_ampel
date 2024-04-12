@@ -21,23 +21,13 @@ void loop() {
 }
 
 
-void fadeRow(float duration, int stepSize = 8 ) {
+void fadeRow(float duration, int targetFps = 30) {
 
+  int iterations = 1 + static_cast<int>(targetFps * duration/1000); // a bit complicated, but it's just to round up to the nearest integer, to ensure fps is >= targetFps
 
-  // 2024-04-12 01:54 - Why did I spend so much time on this? The iterator doesn't HAVE to be in any way connected to brightness levels at all. It was just convenient at the time...
-
-  
-  // I definitely over-optimised this...
-  stepSize = 12; // for 21 steps for 50s at 74 rows -> 31fps
-  if (duration < 300) {
-    stepSize = 28; // for 9 steps for 20s at 74 rows -> 30fps
-  }
-  
-
-  for (int brightness = 252; brightness > 0; brightness -= stepSize) { // fade color from max to off
-
+  for (int j = 1; j <= iterations; j++) {
     // A bit of math to calculate the delay time for each step. 
-    int delayTime = duration / (252/stepSize);
+    int delayTime = duration / iterations;
     delay(delayTime);
   }
 }
