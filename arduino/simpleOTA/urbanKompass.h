@@ -92,7 +92,7 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
   // Serial.print("Fade row time:");
   // Serial.println(fadeRowTime);
 
-  dma_display->fillRect(55, 0, 73, 32, dma_display->color565(r, g, b)); //draw full rectangle
+  dma_display->fillRect(55, 0, rows, 32, dma_display->color565(r, g, b)); //draw full rectangle
 
   //MARK: TODO: handle the animation direction oddness
 
@@ -115,11 +115,12 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
 void urbanKompassLoop() {
 
   // keep this here or not?
-  dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // draw bike pictogram
+  // dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // draw bike pictogram
 
   size_t rows = 74; // number of rows
   drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green
   if (stopDisplay) return; // needs to be return if this isn't main loop
+  // syncToMinute here? to avoid 70s cycle skipping a minute every now and then
   drawAndFadeRectangle(255, 0, 0, rows, globalPhase2Length); // for red
 }
 

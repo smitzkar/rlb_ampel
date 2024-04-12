@@ -261,8 +261,8 @@ void loop() {
   dma_display->clearScreen(); // tabula rasa
   switch (displayChoice) {
     case 1:
-      if (changedDisplayChoice) {
-        dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way
+      if (changedDisplayChoice) { // can be removed if I keep it in the urbanKompassLoop
+        dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way // maybe start at 32? there is one empty row at the top that I'm happy to hide, but no more than that (ALSO CHANGE IN urbanKompass.h)
         changedDisplayChoice = false;
       }
       urbanKompassLoop(); // I decided not to call it with parametres, it just uses global variables as set above
@@ -278,7 +278,8 @@ void loop() {
       break;
     case 4:
       // krueneWelle();
-      dma_display->drawBitmap(33, 0, NUMBERS_bits, 96, 32, dma_display->color565(255,255,255)); // to show the full display, it needs to start at 32+1 ("phantom" 1st half of 64x32 matrix)
+      dma_display->drawBitmap(32, 0, NUMBERS_bits, 96, 32, dma_display->color565(255,255,255)); // to show the full display, it needs to start at 32+1 ("phantom" 1st half of 64x32 matrix)
+      // shouldn't it be 32? pixel coordinates start 0,0 
       //dma_display->drawPixel(33, 1, dma_display->color565(0,255,255)); // direct pixel control
       fillRect(33, 5, 5, 5, dma_display->color565(0,255,0)); // from krueneWelle.h
       fillRect(39, 5, 5, 5, dma_display->color565(20,0,0)); // from krueneWelle.h
