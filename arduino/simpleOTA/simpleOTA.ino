@@ -14,15 +14,17 @@ arduinoIDE > sketch > export compiled binary
 
 
 */
-
+// existing libraries
 #include <WiFi.h>
 #include <WebServer.h>  // needs to be here for this part: WebServer server(80);
 #include "webpages.h"   // needs quotation marks if in same directory
+#include "time.h"
+#include "Ticker.h" // to replace delay()
+// custom files
 #include "connectToWifi.h"
 #include "serverSetup.h"
 #include "setupDisplay.h"
 #include "urbanKompass.h"
-#include "time.h"
 #include "bitmaps.h"        // various preconfigured bitmaps (only include this once!)
 #include "iterateBitmaps.h" // functions to iterate over bitmaps
 #include "airlyBitmaps.h"
@@ -49,17 +51,27 @@ const int   daylightOffset_sec = 3600;  // Offset for daylight saving time in se
 int globalPhase1Length = 24; // in seconds
 int globalPhase2Length = 46;
 int globalTolerance = 3;
-int globalNtpUpdateInterval = 5; // in minutes
+//MARK: TODO:
+int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to the actual traffic light. (20s is 96m at 18km/h)
+
+int globalNtpUpdateInterval = 60; // in minutes (was 5 for testing, but 60 is more reasonable, maybe higher? Then needs to have the code adjusted to handle hours instead of minutes)
 int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
 bool changedDisplayChoice = false; // to see if the display choice was changed during runtime
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
-bool animationDirection = false; // false is the original top down. using a boolean to keep it simple
+bool animationDirection = true; // false is the original top down. using a boolean to keep it simple
+
+// maybe replace this with a proper function that accounts for the day of the week? 
 bool startAtSpecificTime = false; 
-int startHour = 19;
-int startMinute = 54; 
+int startHour = 18;
+int startMinute = 52; 
 
 int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on the first loop iteration
 
+
+// Für die Testfelderöffnung
+bool openingDay = false; 
+int openingHour = 12;
+int openingMinute = 1;
 
 
 // WARNING: Do NOT use any sort of LED stuff for troubleshooting on the esp32 wired up to the Ampel!
@@ -87,6 +99,8 @@ void handleServer(void * parameter) {
 
 //MARK: syncToMinute
 // Checks current offset from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
+//MARK: TODO: 
+// - add the delayFromTrafficlight as 2nd parameter? 
 int syncToMinute(int tolerance) {
   time_t now;
   time(&now);
@@ -117,6 +131,7 @@ int syncToMinute(int tolerance) {
 
 //MARK: delayUntil
 // Delays until specified time, with optional buffer in seconds (don't use a buffer larger than 59 seconds. I could write some code handling this case, but this buffer is hardcoded and not accessible to the user, so dear reader... if you want a larger buffer, implement it yourself!).
+//TODO: 
 void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
   time_t now;
   struct tm* currentTime;
@@ -127,7 +142,7 @@ void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
 
   // Adjusts the target time if a buffer is specified
   if (secondsBuffer > 0) {
-    targetSecond = 60 - secondsBuffer - 1; // not sure why, but it kept being off by one second, so I'm compensating for that here
+    targetSecond = 60 - secondsBuffer - 1; // not sure why, but it kept being off by one second, so I'm compensating for that here // doesn't actually change anything, the issue is somewhere else
     if (targetMinute == 0) {
       targetMinute = 59;
       // still getting used to ternary operator. 
@@ -142,7 +157,7 @@ void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
     time(&now);
     currentTime = localtime(&now);
     Serial.println("Waiting for target time...");
-    delay(1000);
+    delay(500);
   } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond));
 
   startAtSpecificTime = false; // Reset the flag, so that the loop doesn't get stuck in this function
@@ -211,8 +226,6 @@ void setup() {
   //     urbanKompassSetup();
   // } 
 
-  delay(2000); 
-
   // starts the two tasks/loops that are always running on specific cores
   xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
   // xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
@@ -232,7 +245,7 @@ void loop() {
   time_t now;
   time(&now); 
 
-  // Update the time from the NTP server every ntpUpdateInterval minutes
+  // Update the time from the NTP server every ntpUpdateInterval minutes (currently only works for minutes and only from 0 to 60. change it to hours to update every other hour, etc.)
   // MOVE THIS INTO handleServer
   if (localtime(&now)->tm_min % globalNtpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_min) {
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -248,16 +261,25 @@ void loop() {
     Serial.println(ctime(&now));
   }
 
+  // Für die Testfelderöffnung 2024-04-25
+  if (openingDay) {
+    delayUntil(openingHour, openingMinute); //MARK: FOR TESTING ONLY?
+    Serial.println("Starting new cycle of blinking at ");
+    time(&now);
+    Serial.println(ctime(&now));
+  }
+
   // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS?
   // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
   // edit: no longer required, because I removed the setup functions
   dma_display->clearScreen(); // tabula rasa
   switch (displayChoice) {
     case 1:
-      if (changedDisplayChoice) { // can be removed if I keep it in the urbanKompassLoop
-        dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way // maybe start at 32? there is one empty row at the top that I'm happy to hide, but no more than that (ALSO CHANGE IN urbanKompass.h)
-        changedDisplayChoice = false;
-      }
+      // if (changedDisplayChoice) { // I don't remember what this was for
+      //   dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way // maybe start at 32? there is one empty row at the top that I'm happy to hide, but no more than that (ALSO CHANGE IN urbanKompass.h)
+      //   changedDisplayChoice = false;
+      // }
+      dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // 31 seems to work perfectly! is at the very edge of the display, cutting off that one empty row from the bitmap
       urbanKompassLoop(); // I decided not to call it with parametres, it just uses global variables as set above
       break;
     case 2: 
