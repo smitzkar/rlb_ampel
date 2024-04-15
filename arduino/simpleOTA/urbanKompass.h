@@ -17,6 +17,10 @@ extern int globalNtpUpdateInterval; // in minutes
 extern int displayChoice; // 1 = urbanKompass, 2 = iterateBitmaps, 
 extern bool animationDirection; // default is the original top down
 
+// where to start the rectangle (32 from phantom half matrix, 23 from bike pictogram) (was originally 55)
+// firstRow + rows should be 128 (total "width" of the display, including phantom matrix)
+int firstRow = 54; 
+
 
 // bike is actually only 23x32 or so, rest is empty -> can maybe redraw it to save some space
 const uint8_t bike_vertical_mono[] PROGMEM = {
@@ -60,18 +64,24 @@ void fadeRow(int r, int g, int b, int i, float fadeRowTime, int targetFps = 30) 
     int fadedG = (fadeSteps - j) * g / fadeSteps;
     int fadedB = (fadeSteps - j) * b / fadeSteps;
 
-    dma_display->drawFastVLine(55 + i, 0, 32, dma_display->color565(fadedR, fadedG, fadedB));
+    dma_display->drawFastVLine(firstRow + i, 0, 32, dma_display->color565(fadedR, fadedG, fadedB));
 
     // A bit of math to calculate the delay time for each step. 
     // delay() only accepts integers, so we need to round the float to the nearest integer. To account for the accumulation of the truncated decimals, we keep track of that error and add it to the next delay once it reaches a full millisecond.
+    //MARK: TODO:
+    // - needs to be adjusted to account for being too slow
+    // - needs to be adjusted to account for big errors (higher than 1)
     float delayTime_float = fadeRowTime / fadeSteps;
     int delayTime = static_cast<int>(delayTime_float);
-    accumulatedError += delayTime_float - delayTime; // accumulate the error
-    if (accumulatedError >= 1) {  // if the error is larger than 1 (ms), we
-      delayTime++;                // add it to the next delay
-      accumulatedError--;         // and subtract 1 from the error
+    accumulatedError += delayTime_float - delayTime; 
+    // if the error is larger than 1ms, we adjust the delayTime
+    if (accumulatedError >= 1 || accumulatedError <= -1) {  
+      int errorInt = static_cast<int>(accumulatedError); // get the integer part of the error
+      delayTime += errorInt; 
+      accumulatedError -= errorInt; // subtract the integer part from the error (to not forget 0.99 or such)
     }
     delay(delayTime);
+
   }
 }
 
@@ -80,6 +90,7 @@ void fadeRow(int r, int g, int b, int i, float fadeRowTime, int targetFps = 30) 
 int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration) {
 
   //MARK: TODO: add this once syncToMinute is implemented
+  // IMPORTANT: this needs to account for the 70s thing, so it can only sync to every 7th full minute... -> ignore this for now and come back to it once Ticker.h is set up
   // if (duration == fastBlinkDuration) {
   // int offset = syncToMinute(globalTolerance); // get the offset within tolerance to adjust to it here
   // Serial.print("Offset: ");
@@ -104,9 +115,7 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
   // Serial.print("Fade row time:");
   // Serial.println(fadeRowTime);
 
-  dma_display->fillRect(55, 0, rows, 32, dma_display->color565(r, g, b)); //draw full rectangle
-
-  //MARK: TODO: handle the animation direction oddness
+  dma_display->fillRect(firstRow, 0, rows, 32, dma_display->color565(r, g, b)); //draw full rectangle // playing with 1st parameter, original = 55
 
   if (!animationDirection) { // Top-down animation
     for (size_t i = 0; i < rows; i++) {
@@ -127,7 +136,7 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
 void urbanKompassLoop() {
 
   // keep this here or not?
-  // dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // draw bike pictogram
+  dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // draw bike pictogram
 
   size_t rows = 74; // number of rows
   drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green
