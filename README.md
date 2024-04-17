@@ -1,5 +1,5 @@
 # NOTES FOR SMITZKAR 
-(not a proper README, yet)
+(not a proper README, yet. might include crass language)
 
 # 2024-04-11 
 
