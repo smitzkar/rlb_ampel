@@ -1,6 +1,7 @@
 #include <Arduino.h>
 
 
+// GFX libary already has one
 void fillRect(int startX, int startY, int width, int height, uint16_t color) {
   for (int y = startY; y < startY + height; y++) {
     for (int x = startX; x < startX + width; x++) {

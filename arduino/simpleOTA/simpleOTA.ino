@@ -19,7 +19,8 @@ arduinoIDE > sketch > export compiled binary
 #include <WebServer.h>  // needs to be here for this part: WebServer server(80);
 #include "webpages.h"   // needs quotation marks if in same directory
 #include "time.h"
-#include "Ticker.h" // to replace delay()
+#include "TickTwo.h" // to replace delay(): https://github.com/sstaub/TickTwo
+
 // custom files
 #include "connectToWifi.h"
 #include "serverSetup.h"
@@ -47,9 +48,11 @@ const long  gmtOffset_sec = 3600;       // Offset for your timezone in seconds
 const int   daylightOffset_sec = 3600;  // Offset for daylight saving time in seconds
 
 
+// TODO: refactor this into some stuct GlobalConfig for easier handling 
 // adjust these according to the actual traffic light (or let the web interface do it)
 int globalPhase1Length = 24; // in seconds
 int globalPhase2Length = 46;
+int totalPhaseLength = globalPhase1Length + globalPhase2Length;
 int globalTolerance = 3;
 //MARK: TODO:
 int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to the actual traffic light. (20s is 96m at 18km/h)
@@ -67,8 +70,12 @@ int startMinute = 52;
 
 int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on the first loop iteration
 
+// hardcoded array of offsets per day of the week (time in seconds % 70)
+// TODO: need to create a proper function to be adaptable to other phaselenghts
+int weekdayOffsets[7] = {60, 40, 20, 0, 50, 30, 10}; // in seconds,(0 = Monday, 1 = Tuesday, etc.)
 
-// Für die Testfelderöffnung
+
+//MARK: Für die Testfelderöffnung
 bool openingDay = false; 
 int openingHour = 12;
 int openingMinute = 1;
@@ -82,7 +89,7 @@ int openingMinute = 1;
 WebServer server(80);
 
 
-//MARK: handleServer
+//MARK: handleServer()
 // Basically the housekeeping function
 // moved to separate core to ensure that even if the wifi function is stuck, the display will still update
 void handleServer(void * parameter) {
@@ -97,7 +104,43 @@ void handleServer(void * parameter) {
 }
 
 
-//MARK: syncToMinute
+// CAN'T THINK!!! rethink this when the office is silent 
+//MARK: dailyReset()
+// to replace syncToMinute()
+// Resets the display at a specific time every day to prevent time drift from potential inaccuracies 
+// int dailyReset(int resetHour = 7, int resetMinute = 0) { // only use hours%7=0
+//   if (resetHour % 7 != 0) {
+//     Serial.println("Please use an hour that is a multiple of 7!");
+//     resetHour = 7; // default to 7
+//   }
+
+//   time_t now;
+//   struct tm* currentTime;
+
+//   int minute = resetMinute - ?; // just to make it easier to read
+
+//   do {
+//     time(&now);
+//     currentTime = localtime(&now);
+//     Serial.println("Waiting for reset time...");
+//     delay(500); // half a second is good enough 
+//   } while (!(currentTime->tm_hour == resetHour 
+//           && currentTime->tm_min  == minute 
+//           && currentTime->tm_sec  == weekdayOffsets[currentTime->tm_wday]));
+
+//   return 0;
+// }
+
+
+// simple function which calculates time in seconds since 00:00:00 for modulo calculations (daily drift due to 70s cycle-length)
+int getCurrentTimeInSeconds() {
+  time_t now = time(NULL);
+  struct tm *timeinfo = localtime(&now);
+  return timeinfo->tm_hour * 3600 + timeinfo->tm_min * 60 + timeinfo->tm_sec;
+}
+
+
+//MARK: syncToMinute()
 // Checks current offset from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
 //MARK: TODO: 
 // - add the delayFromTrafficlight as 2nd parameter? 
@@ -279,6 +322,16 @@ void loop() {
       //   dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way // maybe start at 32? there is one empty row at the top that I'm happy to hide, but no more than that (ALSO CHANGE IN urbanKompass.h)
       //   changedDisplayChoice = false;
       // }
+
+      // figure out the current time drift 
+      // compare the modulo to the expected one for the weekday
+      int timeInSeconds = getCurrentTimeInSeconds(); 
+      int currentOffset = timeInSeconds % totalPhaseLength; // 70s cycle
+      int drift = weekdayOffsets[localtime(&now)->tm_wday] - currentOffset; // in seconds
+      Serial.print("Drift: ");
+      Serial.println(drift); // still need to figure out how to use it 
+
+
       dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // 31 seems to work perfectly! is at the very edge of the display, cutting off that one empty row from the bitmap
       urbanKompassLoop(); // I decided not to call it with parametres, it just uses global variables as set above
       break;

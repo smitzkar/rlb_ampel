@@ -9,6 +9,7 @@ Renamed to urbanKompass.h, to show that Ks worked on it :)
 #include "time.h"
 
 // Get this from main.ino (currently simpleOTA.ino)
+// TODO: should probably put this in a struct
 extern bool stopDisplay;
 extern int globalPhase1Length; // in seconds
 extern int globalPhase2Length;
