@@ -1,0 +1,272 @@
+
+
+<!-- This .html is for dev only, copy the content into webpages.h for compiling. -->
+
+<!-- 
+  the simple Webinterface
+
+  Page to choose between display options, control the Ampel, etc. 
+  (no access to underlying code here, so safe to play with)
+-->
+
+<!--MARK: html-->
+<div id='choice'>
+  <h1>Choose Display Option</h1>
+  <button id='btn1' onclick='updateDisplayChoice(1)'>Radflow</button>
+  <button id='btn2' onclick='updateDisplayChoice(2)'>Airly</button>
+  <button id='btn3' onclick='updateDisplayChoice(3)'>cycleImages</button>
+  <button id='btn4' onclick='updateDisplayChoice(4)'>Kruene Welle</button>
+</div>
+
+<div id='parameters'>
+
+  <br><br>
+  <button id='changeParameters?'>Want to change time parameters?</button>
+
+
+  <div id='timeParameters' style='display: none;'>
+    <h2>Enter parameters for Ampel-Schaltung</h2>
+    <label for='phase1Length'>Phase 1 Length (in seconds):</label>
+    <input type='text' id='phase1Length' name='phase1Length'><br><br>
+    <label for='phase2Length'>Phase 2 Length (in seconds):</label>
+    <input type='text' id='phase2Length' name='phase2Length'><br><br>
+    <label for='ntpUpdateInterval'>NTP Update Interval (in minutes):</label>
+    <input type='text' id='ntpUpdateInterval' name='ntpUpdateInterval'><br><br>
+    <label for='tolerance'>Tolerance (in seconds, 0-20):</label>
+    <input type='text' id='tolerance' name='tolerance'><br><br>
+  </div>
+
+  <br><br>
+
+
+  <label for='animationDirection'>Direction of animation (top down or bottom up)</label><br>
+  <button id='btnTopDown' onclick='updateDirection(false)'>Top Down</button>
+  <button id='btnBottomUp' onclick='updateDirection(true)'>Bottom Up</button><br><br>
+
+  <button id='setTimeButton'>Want to start at a specific time?</button><br><br>
+  <label for='setTime' id='setTimeLabel' style='display: none;'>Set specific time for when to start the cycle.</label>
+  <input type='time' id='setTime' name='setTime' value='00:00:00' style='display: none;'>
+
+  <button onclick='sendParameters()'>Send Parameters</button><span id='response'></span>
+</div>
+
+<!--Keep this here for now-->
+<style>
+  .active {
+  border: 2px solid green;
+  background-color: lightgreen;
+  }
+</style>
+
+
+
+<!--MARK: script-->
+<script>
+
+// Function to send the display choice
+function updateDisplayChoice(choice) {
+  // Send a GET request to the server with the choice as a parameter
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/updateDisplayChoice?choice=' + choice, true);
+  xhr.send();
+  
+  // Remove the 'active' class from all buttons
+  document.getElementById('btn1').classList.remove('active');
+  document.getElementById('btn2').classList.remove('active');
+  document.getElementById('btn3').classList.remove('active');
+  document.getElementById('btn4').classList.remove('active');
+
+  // Add the 'active' class to the clicked button
+  document.getElementById('btn' + choice).classList.add('active');
+
+  // Update the display of the 'parameters' div
+  updateParametersDisplay(choice);
+}
+
+// Function to send the direction choice
+function updateDirection(animationDirection) {
+  // Send a GET request to the server with the direction as a parameter
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/updateDirection?direction=' + animationDirection, true);
+  xhr.send();
+  
+  // Remove the 'active' class from all buttons
+  document.getElementById('btnTopDown').classList.remove('active');
+  document.getElementById('btnBottomUp').classList.remove('active');
+
+  // Add the 'active' class to the clicked button
+  if (animationDirection) {
+    document.getElementById('btnBottomUp').classList.add('active');
+  } else {
+    document.getElementById('btnTopDown').classList.add('active');
+  }
+}
+
+
+
+
+// Function to fetch the current values and pre-fill the input fields
+function fetchCurrentValues() {
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/getCurrentValues', true);
+  xhr.send();
+  
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      console.log('Response from server:', this.responseText);
+      // Parse the response
+      var currentValues = JSON.parse(this.responseText);
+
+      // Pre-fill the input fields
+      document.getElementById('phase1Length').value = currentValues.phase1Length;
+      document.getElementById('phase2Length').value = currentValues.phase2Length;
+      document.getElementById('ntpUpdateInterval').value = currentValues.ntpUpdateInterval;
+      document.getElementById('tolerance').value = currentValues.tolerance;
+
+      // Remove the 'active' class from all buttons
+      document.getElementById('btn1').classList.remove('active');
+      document.getElementById('btn2').classList.remove('active');
+      document.getElementById('btn3').classList.remove('active');
+      document.getElementById('btn4').classList.remove('active');
+      document.getElementById('btnTopDown').classList.remove('active');
+      document.getElementById('btnBottomUp').classList.remove('active');
+  
+
+      // Add the 'active' class to the current choice button
+      document.getElementById('btn' + currentValues.displayChoice).classList.add('active');
+
+      // Add the 'active' class to the current direction button
+      if (currentValues.animationDirection) {
+        document.getElementById('btnBottomUp').classList.add('active');
+      } else {
+        document.getElementById('btnTopDown').classList.add('active');
+      }
+
+      // Update the display of the 'parameters' div
+      updateParametersDisplay(currentValues.displayChoice);
+    }
+  };
+}
+// Call the function when the page loads
+window.onload = fetchCurrentValues;
+
+// Function to update the display of the 'parameters' div
+function updateParametersDisplay(choice) {
+  // Hide the 'parameters' div if the 'Grüne Welle' button is not active
+  if (choice != 1) {
+    document.getElementById('parameters').style.display = 'none';
+  } else {
+    // Show the 'parameters' div if the 'Grüne Welle' button is active
+    document.getElementById('parameters').style.display = 'block';
+  }
+}
+
+// Add onclick event listener to the changeParameters? button to show or hide the first four input fields and their labels
+document.getElementById('changeParameters?').addEventListener('click', function() {
+
+  if (document.getElementById('timeParameters').style.display !== 'none') {
+    document.getElementById('timeParameters').style.display = 'none';
+    document.getElementById('changeParameters?').innerText = 'Want to change time parameters?';
+  } else {
+    document.getElementById('timeParameters').style.display = 'block'
+    document.getElementById('changeParameters?').innerText = 'Please close this if you don\'t want to change time parameters.';
+  }
+});
+
+// add onclick event listener to the setTime? button to show the time input field and label
+document.getElementById('setTimeButton').addEventListener('click', function() {
+  // Show the time input field and label when the button is clicked, or hide again
+  if (document.getElementById('setTime').style.display !== 'none') {
+    document.getElementById('setTime').style.display = 'none';
+    document.getElementById('setTimeLabel').style.display = 'none';
+    document.getElementById('setTimeButton').innerText = 'Want to start at a specific time?'; 
+  }
+  else {
+    document.getElementById('setTime').style.display = 'block';
+    document.getElementById('setTimeLabel').style.display = 'block';
+    document.getElementById('setTimeButton').innerText = 'Please close this if you don\'t want to set a specific time.';
+  }
+});
+
+// Function to send the parameters for the Ampel-Schaltung 
+function sendParameters() {
+  // clear the response field
+  document.getElementById('response').innerHTML = '';
+
+  var phase1Length = document.getElementById('phase1Length').value;
+  var phase2Length = document.getElementById('phase2Length').value;
+  var ntpUpdateInterval = document.getElementById('ntpUpdateInterval').value;
+  var tolerance = document.getElementById('tolerance').value;
+  
+  // Check if the time input field is visible
+  var setTime = '';
+  if (document.getElementById('setTime').style.display !== 'none') {
+    setTime = document.getElementById('setTime').value;
+  }
+  
+  // Send a GET request to the ESP32
+  var xhr = new XMLHttpRequest();
+  xhr.open('GET', '/updateParameters?phase1Length=' + phase1Length + '&phase2Length=' + phase2Length + '&ntpUpdateInterval=' + ntpUpdateInterval + '&tolerance=' + tolerance + (setTime ? '&setTime=' + setTime : ''), true);
+  xhr.send();
+  
+  xhr.onreadystatechange = function() {
+    if (this.readyState == 4 && this.status == 200) {
+      // Handle the response from the ESP32
+      console.log(this.responseText);
+      document.getElementById('response').innerHTML = this.responseText; 
+    }
+  };
+}
+</script>
+
+<!--MARK: style-->
+<style>
+  #file-input, input {
+    width: 100%;
+    height: 44px;
+    border-radius: 4px;
+    margin: 10px auto;
+    font-size: 15px;
+  }
+  input {
+    background: #f1f1f1;
+    border: 0;
+    padding: 0 15px;
+  }
+  body {
+    background: #3498db;
+    font-family: sans-serif;
+    font-size: 14px;
+    color: #777;
+  }
+  #file-input {
+    padding: 0;
+    border: 1px solid #ddd;
+    line-height: 44px;
+    text-align: left;
+    display: block;
+    cursor: pointer;
+  }
+  #bar, #prgbar {
+    background-color: #f1f1f1;
+    border-radius: 10px;
+  }
+  #bar {
+    background-color: #3498db;
+    width: 0%;
+    height: 10px;
+  }
+  form {
+    background: #fff;
+    max-width: 258px;
+    margin: 75px auto;
+    padding: 30px;
+    border-radius: 5px;
+    text-align: center;
+  }
+  .btn {
+    background: #3498db;
+    color: #fff;
+    cursor: pointer;
+  }
+</style>
