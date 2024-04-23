@@ -312,24 +312,35 @@ void loop() {
     Serial.println(ctime(&now));
   }
 
+  // int timeInSeconds = 0;
+  // int currentOffset = 0;
+  // int drift = 0;
+
   // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS?
   // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
   // edit: no longer required, because I removed the setup functions
   dma_display->clearScreen(); // tabula rasa
   switch (displayChoice) {
     case 1:
+    
       // if (changedDisplayChoice) { // I don't remember what this was for
       //   dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way // maybe start at 32? there is one empty row at the top that I'm happy to hide, but no more than that (ALSO CHANGE IN urbanKompass.h)
       //   changedDisplayChoice = false;
       // }
 
-      // figure out the current time drift 
-      // compare the modulo to the expected one for the weekday
-      int timeInSeconds = getCurrentTimeInSeconds(); 
-      int currentOffset = timeInSeconds % totalPhaseLength; // 70s cycle
-      int drift = weekdayOffsets[localtime(&now)->tm_wday] - currentOffset; // in seconds
-      Serial.print("Drift: ");
-      Serial.println(drift); // still need to figure out how to use it 
+
+  //MARK: IMPORTANT
+  // functionality to sync at any time! 
+  // because we might be switching between display options, killing the loop and restarting it
+
+      //MARK: TODO
+      // // figure out the current time drift 
+      // // compare the modulo to the expected one for the weekday
+      // timeInSeconds = getCurrentTimeInSeconds(); 
+      // currentOffset = timeInSeconds % totalPhaseLength; // 70s cycle
+      // drift = weekdayOffsets[localtime(&now)->tm_wday] - currentOffset; // in seconds
+      // Serial.print("Drift: ");
+      // Serial.println(drift); // still need to figure out how to use it 
 
 
       dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // 31 seems to work perfectly! is at the very edge of the display, cutting off that one empty row from the bitmap
