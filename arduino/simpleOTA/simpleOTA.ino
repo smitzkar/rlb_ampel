@@ -67,6 +67,7 @@ bool animationDirection = true; // false is the original top down. using a boole
 bool startAtSpecificTime = false; 
 int startHour = 18;
 int startMinute = 52; 
+int startSecond = 0;
 
 int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on the first loop iteration
 
@@ -322,7 +323,7 @@ void loop() {
   dma_display->clearScreen(); // tabula rasa
   switch (displayChoice) {
     case 1:
-    
+
       // if (changedDisplayChoice) { // I don't remember what this was for
       //   dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way // maybe start at 32? there is one empty row at the top that I'm happy to hide, but no more than that (ALSO CHANGE IN urbanKompass.h)
       //   changedDisplayChoice = false;

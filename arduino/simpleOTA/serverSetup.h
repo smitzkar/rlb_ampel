@@ -14,6 +14,7 @@ extern bool animationDirection;
 extern bool startAtSpecificTime;
 extern int startHour;
 extern int startMinute;
+extern int startSecond;
 
 
 
@@ -97,9 +98,11 @@ server.on("/updateParameters", HTTP_GET, []() {
     startAtSpecificTime = false;
   } else {
     startAtSpecificTime = true;
-    int colonPos = setTime.indexOf(':');
-    startHour = setTime.substring(0, colonPos).toInt();
-    startMinute = setTime.substring(colonPos + 1).toInt();
+    // int colonPos = setTime.indexOf(':');
+    // startHour = setTime.substring(0, colonPos).toInt();
+    // startMinute = setTime.substring(colonPos + 1).toInt();
+    // use this instead: 
+    sscanf(setTime.c_str(), "%d:%d:%d", &startHour, &startMinute, &startSecond);
   }
   // Send a response back to the browser
   server.send(200, "text/plain", "Parameters updated successfully");  
