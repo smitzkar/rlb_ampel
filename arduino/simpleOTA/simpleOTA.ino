@@ -299,7 +299,7 @@ void loop() {
   }
 
   if (startAtSpecificTime) {
-    delayUntil(startHour, startMinute); //MARK: FOR TESTING ONLY?
+    delayUntil(startHour, startMinute, startSecond); //MARK: FOR TESTING ONLY?
     Serial.println("Starting new cycle of blinking at ");
     time(&now);
     Serial.println(ctime(&now));
