@@ -80,6 +80,7 @@ int weekdayOffsets[7] = {60, 40, 20, 0, 50, 30, 10}; // in seconds,(0 = Monday, 
 bool openingDay = false; 
 int openingHour = 12;
 int openingMinute = 1;
+int openingSecond = 0;
 
 
 // WARNING: Do NOT use any sort of LED stuff for troubleshooting on the esp32 wired up to the Ampel!
@@ -176,11 +177,9 @@ int syncToMinute(int tolerance) {
 //MARK: delayUntil
 // Delays until specified time, with optional buffer in seconds (don't use a buffer larger than 59 seconds. I could write some code handling this case, but this buffer is hardcoded and not accessible to the user, so dear reader... if you want a larger buffer, implement it yourself!).
 //TODO: 
-void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
+void delayUntil(int targetHour, int targetMinute, int targetSecond, int secondsBuffer = 0) {
   time_t now;
   struct tm* currentTime;
-
-  int targetSecond = 0; 
 
   secondsBuffer = secondsBuffer > 59 ? 59 : secondsBuffer; // Just in case someone tries to use a buffer larger than 59 seconds
 
@@ -202,6 +201,7 @@ void delayUntil(int targetHour, int targetMinute, int secondsBuffer = 0) {
     currentTime = localtime(&now);
     Serial.println("Waiting for target time...");
     delay(500);
+  // currently only tested for targetSecond = 0
   } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond));
 
   startAtSpecificTime = false; // Reset the flag, so that the loop doesn't get stuck in this function
@@ -307,7 +307,7 @@ void loop() {
 
   // Für die Testfelderöffnung 2024-04-25
   if (openingDay) {
-    delayUntil(openingHour, openingMinute); //MARK: FOR TESTING ONLY?
+    delayUntil(openingHour, openingMinute, openingSecond); //MARK: FOR TESTING ONLY?
     Serial.println("Starting new cycle of blinking at ");
     time(&now);
     Serial.println(ctime(&now));
