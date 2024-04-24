@@ -114,6 +114,7 @@ server.on("/updateParameters", HTTP_GET, []() {
 
 
   //MARK: force restart
+  // need to add actual POST request
   // for when I would like to hit that button, but can't reach the device
   server.on("/restart", HTTP_POST, []() {
     server.sendHeader("Connection", "close");
