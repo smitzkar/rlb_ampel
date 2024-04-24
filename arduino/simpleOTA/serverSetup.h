@@ -10,6 +10,7 @@ extern int globalTolerance;
 extern int globalNtpUpdateInterval; 
 extern int displayChoice;
 extern bool changedDisplayChoice;
+extern bool stopDisplay;
 extern bool animationDirection;
 extern bool startAtSpecificTime;
 extern int startHour;
@@ -61,6 +62,7 @@ void serverSetup() {
     // Update global variable
     displayChoice = choice.toInt();
     changedDisplayChoice = true;
+    stopDisplay = true; // Stop the current animation early (to avoid having to wait full cycle to see changes)
 
     // for debugging (shouldn't need to call Serial.begin(..) again here, if it's in main file))
     Serial.print("Display choice updated to: ");
@@ -104,6 +106,10 @@ server.on("/updateParameters", HTTP_GET, []() {
     // use this instead: 
     sscanf(setTime.c_str(), "%d:%d:%d", &startHour, &startMinute, &startSecond);
   }
+
+  // Stop the current animation early (to avoid having to wait full cycle to see changes)
+  stopDisplay = true;
+
   // Send a response back to the browser
   server.send(200, "text/plain", "Parameters updated successfully");  
 });

@@ -16,6 +16,7 @@ extern int globalPhase2Length;
 extern int globalTolerance;
 extern int globalNtpUpdateInterval; // in minutes
 extern int displayChoice; // 1 = urbanKompass, 2 = iterateBitmaps, 
+extern bool stopDisplay; // to stop the display early
 extern bool animationDirection; // default is the original top down
 
 // where to start the rectangle (32 from phantom half matrix, 23 from bike pictogram) (was originally 55)
@@ -55,9 +56,7 @@ void fadeRow(int r, int g, int b, int i, float fadeRowTime, int targetFps = 30) 
   for (int j = 1; j <= fadeSteps; j++) {
 
     // Check if the command to stop the display has been received. If so, clear the display and return. I placed it here, so that it would be as responsible as possible.
-    // Isn't really used, yet. 
     if (stopDisplay) {
-      dma_display->fillScreen(0); 
       return;
     }
 
@@ -140,9 +139,21 @@ void urbanKompassLoop() {
   dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // draw bike pictogram
 
   size_t rows = 74; // number of rows
+  
   drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green
-  if (stopDisplay) return; // needs to be return if this isn't main loop
   // syncToMinute here? to avoid 70s cycle skipping a minute every now and then
+
+  // kind of silly to add this twice, but this is the easiest way 
+  if (stopDisplay){
+    stopDisplay = false; // reset the stopDisplay variable
+    return; // needs to be return if this isn't main loop
+  }
+
   drawAndFadeRectangle(255, 0, 0, rows, globalPhase2Length); // for red
+
+  if (stopDisplay){
+    stopDisplay = false; // reset the stopDisplay variable
+    return; // needs to be return if this isn't main loop
+  }
 }
 

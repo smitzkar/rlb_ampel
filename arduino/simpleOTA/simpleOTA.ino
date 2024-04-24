@@ -175,17 +175,17 @@ int syncToMinute(int tolerance) {
 }
 
 //MARK: delayUntil
-// Delays until specified time, with optional buffer in seconds (don't use a buffer larger than 59 seconds. I could write some code handling this case, but this buffer is hardcoded and not accessible to the user, so dear reader... if you want a larger buffer, implement it yourself!).
-//TODO: 
-void delayUntil(int targetHour, int targetMinute, int targetSecond, int secondsBuffer = 0) {
+// Delays until specified time, currently with a buffer of 1 second because of the early start of North traffic light
+// secondsBuffer isn't currently used
+void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int targetSecond, unsigned int secondsBuffer = 0) {
   time_t now;
   struct tm* currentTime;
 
-  secondsBuffer = secondsBuffer > 59 ? 59 : secondsBuffer; // Just in case someone tries to use a buffer larger than 59 seconds
+  targetSecond = targetSecond > 59 ? 59 : targetSecond % 60; // Just in case someone doesn't understand time
 
-  // Adjusts the target time if a buffer is specified
-  if (secondsBuffer > 0) {
-    targetSecond = 60 - secondsBuffer - 1; // not sure why, but it kept being off by one second, so I'm compensating for that here // doesn't actually change anything, the issue is somewhere else
+  // Adjusts the target time for the early start of north traffic light
+  if (targetSecond == 0) {
+    targetSecond = 60 - 1; // not sure why, but it kept being off by one second, so I'm compensating for that here 
     if (targetMinute == 0) {
       targetMinute = 59;
       // still getting used to ternary operator. 
@@ -196,13 +196,16 @@ void delayUntil(int targetHour, int targetMinute, int targetSecond, int secondsB
     }
   }
 
+  Serial.println("Target time: " + String(targetHour) + ":" + String(targetMinute) + ":" + String(targetSecond));
+  Serial.println("Waiting for target time...");
+
   do {
     time(&now);
     currentTime = localtime(&now);
-    Serial.println("Waiting for target time...");
+    Serial.print(".");
     delay(500);
-  // currently only tested for targetSecond = 0
-  } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond));
+  // we can use targetSecond -1 because if 0 is the target, it will be set to 59 in the previous block
+  } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond - 1));
 
   startAtSpecificTime = false; // Reset the flag, so that the loop doesn't get stuck in this function
 
@@ -227,16 +230,15 @@ void setup() {
   dma_display->begin();
   dma_display->setBrightness8(255); //0-255
 
-  // removed a bunch of delay(2000) here, let's see if it still works
   connectToWiFiAndSetupMDNS(ssid, password, host);   // initial connection to wifi and sets alternative IP -> http://"host".local
   serverSetup(); // this one starts the web server task, which handles all the OTA stuff
+  // I'm not quite sure what happens when it's not connected, but so far that wasn't an issue.
 
   // Configure NTP and sends first request for syncing the time (actually runs asynchronously in the background, handled by FreeRTOS?)
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-  // Wait until time is actually updated
   time_t now;
   time(&now);
-  while (localtime(&now)->tm_year == 70 ) {
+  while (localtime(&now)->tm_year == 70 ) {   // Wait until time is actually updated
     time(&now);
     delay(1000); 
   }
@@ -277,7 +279,7 @@ void setup() {
 
 
   //MARK: TESTING 
-  // put this here to show something when it first starts (because of the delayUntil testing)
+  // put this here to show something when it first starts (because of the delayUntil() testing)
   dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); 
 
 }
@@ -295,19 +297,10 @@ void loop() {
     configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
     lastNtpUpdate = localtime(&now)->tm_min;
     Serial.println(ctime(&now)); // Print the current time to the serial monitor
-    // syncToMinute(globalTolerance); // Delay until just before the start of the next full minute
   }
 
   if (startAtSpecificTime) {
     delayUntil(startHour, startMinute, startSecond); //MARK: FOR TESTING ONLY?
-    Serial.println("Starting new cycle of blinking at ");
-    time(&now);
-    Serial.println(ctime(&now));
-  }
-
-  // Für die Testfelderöffnung 2024-04-25
-  if (openingDay) {
-    delayUntil(openingHour, openingMinute, openingSecond); //MARK: FOR TESTING ONLY?
     Serial.println("Starting new cycle of blinking at ");
     time(&now);
     Serial.println(ctime(&now));
@@ -351,12 +344,12 @@ void loop() {
       iterateAirlyBitmapsLoop();
       // for displays: can use 
       // void setRotation(uint8_t rotation);
-      // to set the rotation of the display -> set it once to handle the current oddness!
+      // to set the rotation of the display -> set it once to handle the current oddness! (need to adjust all the urbanCompass stuff...)
       break;
     case 3:
       iterateBitmapsLoop();
       break;
-    case 4:
+    case 4: // experimental
       // krueneWelle();
       dma_display->drawBitmap(32, 0, NUMBERS_bits, 96, 32, dma_display->color565(255,255,255)); // to show the full display, it needs to start at 32+1 ("phantom" 1st half of 64x32 matrix) -> but index 0 is the first pixel, so it's actually 32?
       // shouldn't it be 32? pixel coordinates start 0,0 
