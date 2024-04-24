@@ -142,37 +142,37 @@ int getCurrentTimeInSeconds() {
 }
 
 
-//MARK: syncToMinute()
+//MARK: syncToMinute() (OBSOLETE)
 // Checks current offset from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
-//MARK: TODO: 
+// TODO: 
 // - add the delayFromTrafficlight as 2nd parameter? 
-int syncToMinute(int tolerance) {
-  time_t now;
-  time(&now);
-  struct tm* currentTime = localtime(&now);
-  int seconds = currentTime->tm_sec;
+// int syncToMinute(int tolerance) {
+//   time_t now;
+//   time(&now);
+//   struct tm* currentTime = localtime(&now);
+//   int seconds = currentTime->tm_sec;
 
-  if (tolerance < seconds && seconds < (60 - tolerance)) {
-    // Calculate the remaining seconds until the next minute (can't remember why I went with 59 instead of 60))
-    int remainingSeconds = 59 - seconds;
-    Serial.print("Syncing to minute. Starting in:");
-    Serial.println(remainingSeconds);
+//   if (tolerance < seconds && seconds < (60 - tolerance)) {
+//     // Calculate the remaining seconds until the next minute (can't remember why I went with 59 instead of 60))
+//     int remainingSeconds = 59 - seconds;
+//     Serial.print("Syncing to minute. Starting in:");
+//     Serial.println(remainingSeconds);
 
-    // Delay for the remaining time
-    delay(remainingSeconds * 1000);
-    Serial.println("Synced to minute");
-    return 0;
-  }
-  // Could do this with ternary, but it's 2:55 am
-  else {
-    if (seconds <= 30){
-      return seconds;
-    }
-    else {
-      return 60 - seconds;
-    }
-  }
-}
+//     // Delay for the remaining time
+//     delay(remainingSeconds * 1000);
+//     Serial.println("Synced to minute");
+//     return 0;
+//   }
+//   // Could do this with ternary, but it's 2:55 am
+//   else {
+//     if (seconds <= 30){
+//       return seconds;
+//     }
+//     else {
+//       return 60 - seconds;
+//     }
+//   }
+// }
 
 //MARK: delayUntil
 // Delays until specified time, currently with a buffer of 1 second because of the early start of North traffic light
