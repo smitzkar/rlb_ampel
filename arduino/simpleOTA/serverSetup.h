@@ -27,16 +27,14 @@ extern const char* controlDisplayIndex;
 
 void serverSetup() {
 
-
-
-  // the login page
+  //MARK: login page
   server.on("/", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
     server.send(200, "text/html", loginIndex);
   });
 
 
-  // the web interface for controlling the display
+  //MARK: web interface for changing display
   server.on("/controlDisplay", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
     server.send(200, "text/html", controlDisplayIndex);
@@ -115,8 +113,15 @@ server.on("/updateParameters", HTTP_GET, []() {
 });
 
 
+  //MARK: force restart
+  // for when I would like to hit that button, but can't reach the device
+  server.on("/restart", HTTP_POST, []() {
+    server.sendHeader("Connection", "close");
+    server.send(200, "text/plain", "Restarting...");
+    ESP.restart();
+  });
 
-  // the OTA webupdater
+  //MARK: OTA webupdater
   server.on("/ota", HTTP_GET, []() {
     server.sendHeader("Connection", "close");
     server.send(200, "text/html", otaIndex);
@@ -147,7 +152,7 @@ server.on("/updateParameters", HTTP_GET, []() {
   // end of the OTA webupdater
 
 
-  // my old addition code
+  //MARK: my old addition code
   server.on("/addition", HTTP_GET, []() {
       server.sendHeader("Connection", "close");
       server.send(200, "text/html", additionIndex);
