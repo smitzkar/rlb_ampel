@@ -57,7 +57,7 @@ int globalTolerance = 3;
 //MARK: TODO:
 int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to the actual traffic light. (20s is 96m at 18km/h)
 
-int globalNtpUpdateInterval = 60; // in minutes (was 5 for testing, but 60 is more reasonable, maybe higher? Then needs to have the code adjusted to handle hours instead of minutes)
+int ntpUpdateInterval = 6; // in hours, how often it syncs the internal clock to the NTP server
 int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
 bool changedDisplayChoice = false; // to see if the display choice was changed during runtime
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
@@ -71,12 +71,13 @@ int startSecond = 0;
 
 int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on the first loop iteration
 
-// hardcoded array of offsets per day of the week (time in seconds % 70)
+// HARDCODED array of offsets per day of the week (time in seconds % 70)
 // TODO: need to create a proper function to be adaptable to other phaselenghts
 int weekdayOffsets[7] = {60, 40, 20, 0, 50, 30, 10}; // in seconds,(0 = Monday, 1 = Tuesday, etc.)
 
 
 //MARK: Für die Testfelderöffnung
+// just some times I chose that will work
 bool openingDay = false; 
 int openingHour = 12;
 int openingMinute = 1;
@@ -92,28 +93,45 @@ WebServer server(80);
 
 
 //MARK: handleServer()
+// should rename this to houseKeeping() or such
 // Basically the housekeeping function
 // moved to separate core to ensure that even if the wifi function is stuck, the display will still update
 void handleServer(void * parameter) {
   for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
 
-    if (WiFi.status() != WL_CONNECTED) {   // check if WiFi is still connected, attempt to reconnect if so
+    // time keeping (to be moved to a separate function / file)
+    // Update the time from the NTP server every ntpUpdateInterval hours
+    // TODO: use ticker library
+    time_t now;
+    time(&now); 
+    if (localtime(&now)->tm_hour % ntpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_hour) {
+      configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+      lastNtpUpdate = localtime(&now)->tm_hour;
+      Serial.println("Synced to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
+    }
+
+    // check if WiFi is still connected, attempt to reconnect if so. Not sure if this is necessary or if FreeROTS handles it, but it doesn't hurt to have it here.
+    if (WiFi.status() != WL_CONNECTED) {   
       connectToWiFiAndSetupMDNS(ssid, password, host);
     }
+    // all the server stuff is handled in the serverSetup() function
     server.handleClient();
-    delay(1); // was thinking of replacing this with vTaskDelay(), but ESP32 already uses FreeRTOS, so it's the same thing
+
+    delay(1); // to prevent shenanigans
   }
 }
 
 
-// CAN'T THINK!!! rethink this when the office is silent 
-//MARK: dailyReset()
+// CAN'T THINK!!! redo this when the office is silent 
+// -> easier to use this to just call delayUntil() 
+//MARK: dailyReset() (INACTIVE)
 // to replace syncToMinute()
 // Resets the display at a specific time every day to prevent time drift from potential inaccuracies 
-// int dailyReset(int resetHour = 7, int resetMinute = 0) { // only use hours%7=0
+// To return the drift for analysis and adjustment
+// int dailyReset(int resetHour = 7, int resetMinute = 0) { // only use hours%7=0 to make things easy
 //   if (resetHour % 7 != 0) {
 //     Serial.println("Please use an hour that is a multiple of 7!");
-//     resetHour = 7; // default to 7
+//     resetHour = 7; // default to 7 am if the input is invalid
 //   }
 
 //   time_t now;
@@ -130,11 +148,12 @@ void handleServer(void * parameter) {
 //           && currentTime->tm_min  == minute 
 //           && currentTime->tm_sec  == weekdayOffsets[currentTime->tm_wday]));
 
-//   return 0;
+//   return 0; // I want this to return the drift, but haven't implemented that yet
 // }
 
 
-// simple function which calculates time in seconds since 00:00:00 for modulo calculations (daily drift due to 70s cycle-length)
+//MARK: getCurrentTimeInSeconds()
+// simple helper function which calculates time in seconds since 00:00:00 for modulo calculations (daily drift due to 70s cycle-length)
 int getCurrentTimeInSeconds() {
   time_t now = time(NULL);
   struct tm *timeinfo = localtime(&now);
@@ -207,8 +226,6 @@ void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int
   // we can use targetSecond -1 because if 0 is the target, it will be set to 59 in the previous block
   } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond - 1));
 
-  startAtSpecificTime = false; // Reset the flag, so that the loop doesn't get stuck in this function
-
   // Execution will continue here at the target time (or just use it to delay the loop)
 }
 
@@ -246,32 +263,6 @@ void setup() {
   time(&now); 
   Serial.println(ctime(&now)); // Print the current time to the serial monitor
 
-
-
-  // Hm... 
-  // This won't run if the choice is changed during runtime. 
-  // Need to do some more finagling.
-  // Might not actually need to run any setup function for these?
-  // switch (displayChoice) {
-  //   case 1:
-  //     urbanKompassSetup();
-  //     break;
-  //   case 2: 
-  //     iterateAirlyBitmapsLoop();
-  //     break;
-  //   case 3: 
-  //     iterateBitmapsLoop();
-  //     break;
-  //   case 4:
-  //     // krueneWelle();
-  //     Serial.println("Kruene Welle not implemented yet");
-  //     delay(5000);
-  //     break;
-  //   default:
-  //     Serial.println("Defaulting to Urban Kompass!");
-  //     urbanKompassSetup();
-  // } 
-
   // starts the two tasks/loops that are always running on specific cores
   xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
   // xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
@@ -288,69 +279,63 @@ void setup() {
 void loop() {
   // maybe remove the updateDisplay function and just put it in here
 
+  // needs to be initialised (with value!) outside of switch case
   time_t now;
-  time(&now); 
-
-  // Update the time from the NTP server every ntpUpdateInterval minutes (currently only works for minutes and only from 0 to 60. change it to hours to update every other hour, etc.)
-  // MOVE THIS INTO handleServer
-  if (localtime(&now)->tm_min % globalNtpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_min) {
-    configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-    lastNtpUpdate = localtime(&now)->tm_min;
-    Serial.println(ctime(&now)); // Print the current time to the serial monitor
-  }
-
-  if (startAtSpecificTime) {
-    delayUntil(startHour, startMinute, startSecond); //MARK: FOR TESTING ONLY?
-    Serial.println("Starting new cycle of blinking at ");
-    time(&now);
-    Serial.println(ctime(&now));
-  }
-
+  time(&now);
   // int timeInSeconds = 0;
   // int currentOffset = 0;
   // int drift = 0;
 
-  // NEED TO ADD A CHECK IF CHOICE CHANGED BETWEEN LOOPS?
-  // IF YES -> RUN THE SETUP FOR THE NEW CHOICE!!! 
-  // edit: no longer required, because I removed the setup functions
+  stopDisplay = false;        // reset the stopDisplay variable 
   dma_display->clearScreen(); // tabula rasa
+
   switch (displayChoice) {
-    case 1:
+    case 1: // urbanKompass
 
-      // if (changedDisplayChoice) { // I don't remember what this was for
-      //   dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // moved this here, maybe this is the easiest way // maybe start at 32? there is one empty row at the top that I'm happy to hide, but no more than that (ALSO CHANGE IN urbanKompass.h)
-      //   changedDisplayChoice = false;
-      // }
+      //MARK: IMPORTANT
+      // functionality to sync at any time! 
+      // because we might be switching between display options, killing the loop and restarting it
+      if (changedDisplayChoice) { 
+        // sync to next available start time 
+        // ...
+        //MARK: TODO
+        // // figure out the current time drift 
+        // // compare the modulo to the expected one for the weekday
+        // timeInSeconds = getCurrentTimeInSeconds(); 
+        // currentOffset = timeInSeconds % totalPhaseLength; // 70s cycle
+        // drift = weekdayOffsets[localtime(&now)->tm_wday] - currentOffset; // in seconds
+        // Serial.print("Drift: ");
+        // Serial.println(drift); // still need to figure out how to use it 
+        changedDisplayChoice = false; // reset the flag
+      }
 
 
-  //MARK: IMPORTANT
-  // functionality to sync at any time! 
-  // because we might be switching between display options, killing the loop and restarting it
-
-      //MARK: TODO
-      // // figure out the current time drift 
-      // // compare the modulo to the expected one for the weekday
-      // timeInSeconds = getCurrentTimeInSeconds(); 
-      // currentOffset = timeInSeconds % totalPhaseLength; // 70s cycle
-      // drift = weekdayOffsets[localtime(&now)->tm_wday] - currentOffset; // in seconds
-      // Serial.print("Drift: ");
-      // Serial.println(drift); // still need to figure out how to use it 
+      // moved this here, because it's currently only relevant for the urbanKompass display
+      // moved it below the 
+      if (startAtSpecificTime) {
+        delayUntil(startHour, startMinute, startSecond); //MARK: FOR TESTING ONLY?
+        Serial.println("Starting new cycle of blinking at ");
+        time(&now);
+        Serial.println(ctime(&now));
+        startAtSpecificTime = false; // Reset the flag
+      }
 
 
       dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // 31 seems to work perfectly! is at the very edge of the display, cutting off that one empty row from the bitmap
       urbanKompassLoop(); // I decided not to call it with parametres, it just uses global variables as set above
       break;
-    case 2: 
+    case 2: // airly
       iterateAirlyBitmapsLoop();
       // for displays: can use 
       // void setRotation(uint8_t rotation);
       // to set the rotation of the display -> set it once to handle the current oddness! (need to adjust all the urbanCompass stuff...)
       break;
-    case 3:
+    case 3: // iterateBitmaps
       iterateBitmapsLoop();
       break;
     case 4: // experimental
       // krueneWelle();
+      // might have to move startAtSpecificTime here, too
       dma_display->drawBitmap(32, 0, NUMBERS_bits, 96, 32, dma_display->color565(255,255,255)); // to show the full display, it needs to start at 32+1 ("phantom" 1st half of 64x32 matrix) -> but index 0 is the first pixel, so it's actually 32?
       // shouldn't it be 32? pixel coordinates start 0,0 
       //dma_display->drawPixel(33, 1, dma_display->color565(0,255,255)); // direct pixel control
