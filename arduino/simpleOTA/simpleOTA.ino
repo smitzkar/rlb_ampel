@@ -37,6 +37,9 @@ Since I'm still struggling a bit with the FreeRTOS stuff:
 > loop() as a Task: Treat loop() as a lower priority FreeRTOS task under the operating system's management.
 */
 
+//MARK: CURRENTLY ACTIVE: 
+// "Rearrange, add comments" 2024-04-24, 13:50
+
 
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
