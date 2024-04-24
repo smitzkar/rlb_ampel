@@ -57,7 +57,7 @@ int globalTolerance = 3;
 //MARK: TODO:
 int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to the actual traffic light. (20s is 96m at 18km/h)
 
-int ntpUpdateInterval = 6; // in hours, how often it syncs the internal clock to the NTP server
+int globalNtpUpdateInterval = 6; // in hours, how often it syncs the internal clock to the NTP server
 int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
 bool changedDisplayChoice = false; // to see if the display choice was changed during runtime
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
@@ -100,11 +100,11 @@ void handleServer(void * parameter) {
   for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
 
     // time keeping (to be moved to a separate function / file)
-    // Update the time from the NTP server every ntpUpdateInterval hours
+    // Update the time from the NTP server every globalNtpUpdateInterval hours
     // TODO: use ticker library
     time_t now;
     time(&now); 
-    if (localtime(&now)->tm_hour % ntpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_hour) {
+    if (localtime(&now)->tm_hour % globalNtpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_hour) {
       configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
       lastNtpUpdate = localtime(&now)->tm_hour;
       Serial.println("Synced to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
@@ -292,6 +292,15 @@ void loop() {
   switch (displayChoice) {
     case 1: // urbanKompass
 
+      // moved this here, because it's currently only relevant for the urbanKompass display
+      if (startAtSpecificTime) {
+        delayUntil(startHour, startMinute, startSecond);
+        Serial.println("Starting new cycle of blinking at ");
+        time(&now);
+        Serial.println(ctime(&now));
+        startAtSpecificTime = false; // Reset the flag
+      }
+
       //MARK: IMPORTANT
       // functionality to sync at any time! 
       // because we might be switching between display options, killing the loop and restarting it
@@ -299,25 +308,19 @@ void loop() {
         // sync to next available start time 
         // ...
         //MARK: TODO
-        // // figure out the current time drift 
-        // // compare the modulo to the expected one for the weekday
+        // get current time
+        // round up to closest 10s 
+        // compare the modulo to the expected one for the weekday
         // timeInSeconds = getCurrentTimeInSeconds(); 
         // currentOffset = timeInSeconds % totalPhaseLength; // 70s cycle
+        // compare to the expected offset for the day of the week
+        // figure out next available start time
+        // delayUntil(nextAvailableHour, nextAvailableMinute, nextAvailableSecond);
+        // // calculate drift for QA?
         // drift = weekdayOffsets[localtime(&now)->tm_wday] - currentOffset; // in seconds
         // Serial.print("Drift: ");
         // Serial.println(drift); // still need to figure out how to use it 
         changedDisplayChoice = false; // reset the flag
-      }
-
-
-      // moved this here, because it's currently only relevant for the urbanKompass display
-      // moved it below the 
-      if (startAtSpecificTime) {
-        delayUntil(startHour, startMinute, startSecond); //MARK: FOR TESTING ONLY?
-        Serial.println("Starting new cycle of blinking at ");
-        time(&now);
-        Serial.println(ctime(&now));
-        startAtSpecificTime = false; // Reset the flag
       }
 
 
