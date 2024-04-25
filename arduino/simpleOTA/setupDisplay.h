@@ -33,20 +33,47 @@
 
 // for new board (HUZZAH32 ESP32 Feather)
 // (currently just put them in whereever, clearly needs to be done with some plan -> most likely the last 3 pins, maybe A through D. Or just avoid certain pins? Avoid input only and maybe the named ones)
-#define R1_PIN 16 // 39 // input only
-#define G1_PIN 17 // 36 // input only
-#define B1_PIN 4
-#define R2_PIN 5  // bootstrapping? maybe okay?
-#define G2_PIN 18
-#define B2_PIN 19 
-#define A_PIN 13
-#define B_PIN 12
-#define C_PIN 27
-#define D_PIN 33
+// #define R1_PIN 21 // 39 // input only
+// #define G1_PIN 17 // 36 // input only
+// #define B1_PIN 4
+// #define R2_PIN 5  // bootstrapping? maybe okay?
+// #define G2_PIN 18
+// #define B2_PIN 19 
+// #define A_PIN 23 // SDA // 13
+// #define B_PIN 12
+// #define C_PIN 27
+// #define D_PIN 33
+// #define E_PIN -1 // to make sure that it doesn't get used? 
+// #define LAT_PIN 32
+// #define OE_PIN 14
+// #define CLK_PIN 16 // bootstrapping? 
+
+//16 and 17 seems to fuck with booting?
+
+// // https://github.com/adafruit/Adafruit_Protomatter/blob/master/examples/simple/simple.ino
+// uint8_t rgbPins[]  = {4, 12, 13, 14, 15, 21};
+// uint8_t addrPins[] = {16, 17, 25, 26};
+// uint8_t clockPin   = 27; // Must be on same port as rgbPins
+// uint8_t latchPin   = 32;
+// uint8_t oePin      = 33;
+
+// Replace the old pin definitions with the new ones
+#define R1_PIN 4
+#define G1_PIN 12
+#define B1_PIN 13
+#define R2_PIN 14
+#define G2_PIN 15
+#define B2_PIN 21
+#define A_PIN 16
+#define B_PIN 17
+#define C_PIN 25
+#define D_PIN 26
 #define E_PIN -1 // to make sure that it doesn't get used? 
-#define LAT_PIN 32
-#define OE_PIN 14
-#define CLK_PIN 15 // bootstrapping? 
+#define LAT_PIN 27
+#define OE_PIN 32
+#define CLK_PIN 33
+
+
 
 
 /*--------------------- MATRIX LILBRARY CONFIG -------------------------*/

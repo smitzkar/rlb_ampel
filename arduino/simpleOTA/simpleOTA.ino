@@ -38,7 +38,7 @@ Since I'm still struggling a bit with the FreeRTOS stuff:
 */
 
 //MARK: CURRENTLY ACTIVE: 
-// "Rearrange, add comments" 2024-04-24, 13:50
+// "Change PINs"
 
 
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
