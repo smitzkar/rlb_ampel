@@ -14,7 +14,9 @@
 #define Sprint(a) (Serial.print(a))
 #define SprintDEC(a, x) (Serial.print(a, x))
 
-
+// https://learn.adafruit.com/assets/111179
+//MARK: TRY AGAIN WITH THESE!!!
+// Or the ones below 
 /*--------------------- RGB DISPLAY PINS -------------------------*/
 // #define R1_PIN 25
 // #define G1_PIN 26
@@ -58,6 +60,7 @@
 // uint8_t oePin      = 33;
 
 // Replace the old pin definitions with the new ones
+//MARK: Try with these
 #define R1_PIN 4
 #define G1_PIN 12
 #define B1_PIN 13
@@ -77,7 +80,13 @@
   uint8_t clockPin   = 27; // Must be on same port as rgbPins
   uint8_t latchPin   = 32;
   uint8_t oePin      = 33;
-The order is different!! */
+The order is different!! 
+Stupid hub75 library randomly changed the order of pins...*/
+
+/*
+Below is a bare minimum sketch to draw a single white dot in the top left. You must call begin() before you call ANY pixel-drawing (fonts, lines, colours etc.) function of the MatrixPanel_I2S_DMA class.
+
+MUST call begin() ... uhm...*/
 
 // https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA?tab=readme-ov-file#how-can-i-configure-it-to-work-with-an-off-the-shelf-boardshield-with-hub75-connector-eg-adafruit-matrixportal
 // info on pins 
