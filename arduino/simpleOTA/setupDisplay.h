@@ -33,8 +33,8 @@
 
 // for new board (HUZZAH32 ESP32 Feather)
 // (currently just put them in whereever, clearly needs to be done with some plan -> most likely the last 3 pins, maybe A through D. Or just avoid certain pins? Avoid input only and maybe the named ones)
-#define R1_PIN 39 // input only
-#define G1_PIN 36 // input only
+#define R1_PIN 16 // 39 // input only
+#define G1_PIN 17 // 36 // input only
 #define B1_PIN 4
 #define R2_PIN 5  // bootstrapping? maybe okay?
 #define G2_PIN 18
