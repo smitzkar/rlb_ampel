@@ -50,7 +50,7 @@
 
 //16 and 17 seems to fuck with booting?
 
-// // https://github.com/adafruit/Adafruit_Protomatter/blob/master/examples/simple/simple.ino
+// https://github.com/adafruit/Adafruit_Protomatter/blob/master/examples/simple/simple.ino
 // uint8_t rgbPins[]  = {4, 12, 13, 14, 15, 21};
 // uint8_t addrPins[] = {16, 17, 25, 26};
 // uint8_t clockPin   = 27; // Must be on same port as rgbPins
@@ -69,9 +69,28 @@
 #define C_PIN 25
 #define D_PIN 26
 #define E_PIN -1 // to make sure that it doesn't get used? 
-#define LAT_PIN 27
-#define OE_PIN 32
-#define CLK_PIN 33
+#define LAT_PIN 32
+#define OE_PIN 33
+#define CLK_PIN 27
+// Fuck. 
+/* from protomatter example: 
+  uint8_t clockPin   = 27; // Must be on same port as rgbPins
+  uint8_t latchPin   = 32;
+  uint8_t oePin      = 33;
+The order is different!! */
+
+// https://github.com/mrcodetastic/ESP32-HUB75-MatrixPanel-DMA?tab=readme-ov-file#how-can-i-configure-it-to-work-with-an-off-the-shelf-boardshield-with-hub75-connector-eg-adafruit-matrixportal
+// info on pins 
+
+
+// from https://learn.adafruit.com/adafruit-huzzah32-esp32-feather/esp32-faq
+/*
+A2 / I34 - this pin is an input only! You can use it as an analog input so we suggest keeping it for that purpose
+A3 / I39 - this pin is an input only! You can use it as an analog input so we suggest keeping it for that purpose
+A4 / I36 - this pin is an input only! You can use it as an analog input so we suggest keeping it for that purpose
+IO12 - this pin has an internal pulldown, and is used for booting up. We recommend not using it or if you do use it, as an output only so that nothing interferes with the pulldown when the board resets
+A13 / I35 - this pin is not exposed, it is used only for measuring the voltage on the battery. The voltage is divided by 2 so be sure to double it once you've done the analog reading
+*/
 
 
 
