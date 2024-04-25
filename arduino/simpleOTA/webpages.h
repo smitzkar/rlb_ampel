@@ -129,6 +129,11 @@ std::string controlDisplayIndexStr = R"(
   <input type='time' id='setTime' name='setTime' value='00:00:00' step='1' style='display: none;'>
 
   <button onclick='sendParameters()'>Send Parameters</button><span id='response'></span>
+
+  <form action="/restart" method="post">
+    <input type="submit" value="Restart">
+  </form>
+
 </div>
 
 <style>
