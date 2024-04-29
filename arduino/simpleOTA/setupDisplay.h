@@ -18,20 +18,20 @@
 //MARK: TRY AGAIN WITH THESE!!!
 // Or the ones below 
 /*--------------------- RGB DISPLAY PINS -------------------------*/
-// #define R1_PIN 25
-// #define G1_PIN 26
-// #define B1_PIN 27
-// #define R2_PIN 14
-// #define G2_PIN 12
-// #define B2_PIN 13 
-// #define A_PIN 23
-// #define B_PIN 19
-// #define C_PIN 5
-// #define D_PIN 17
-// #define E_PIN -1 // to make sure that it doesn't get used?
-// #define LAT_PIN 4
-// #define OE_PIN 15
-// #define CLK_PIN 16
+#define R1_PIN 25
+#define G1_PIN 26
+#define B1_PIN 27
+#define R2_PIN 14
+#define G2_PIN 12
+#define B2_PIN 13 
+#define A_PIN 23
+#define B_PIN 19
+#define C_PIN 5
+#define D_PIN 17
+#define E_PIN -1 // to make sure that it doesn't get used?
+#define LAT_PIN 4
+#define OE_PIN 15
+#define CLK_PIN 16
 
 // for new board (HUZZAH32 ESP32 Feather)
 // (currently just put them in whereever, clearly needs to be done with some plan -> most likely the last 3 pins, maybe A through D. Or just avoid certain pins? Avoid input only and maybe the named ones)
@@ -60,21 +60,21 @@
 // uint8_t oePin      = 33;
 
 // Replace the old pin definitions with the new ones
-//MARK: Try with these
-#define R1_PIN 4
-#define G1_PIN 12
-#define B1_PIN 13
-#define R2_PIN 14
-#define G2_PIN 15
-#define B2_PIN 21
-#define A_PIN 16
-#define B_PIN 17
-#define C_PIN 25
-#define D_PIN 26
-#define E_PIN -1 // to make sure that it doesn't get used? 
-#define LAT_PIN 32
-#define OE_PIN 33
-#define CLK_PIN 27
+//MARK: Try with these... did't show anything still
+// #define R1_PIN 4
+// #define G1_PIN 12
+// #define B1_PIN 13
+// #define R2_PIN 14
+// #define G2_PIN 15
+// #define B2_PIN 21
+// #define A_PIN 16
+// #define B_PIN 17
+// #define C_PIN 25
+// #define D_PIN 26
+// #define E_PIN -1 // to make sure that it doesn't get used? 
+// #define LAT_PIN 32
+// #define OE_PIN 33
+// #define CLK_PIN 27
 // Fuck. 
 /* from protomatter example: 
   uint8_t clockPin   = 27; // Must be on same port as rgbPins
