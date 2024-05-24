@@ -43,8 +43,7 @@ const char* ssid = "Rlb_Ampel";
 const char* password = "Rlb_Ampel<3";
 const char* ntpServer = "0.pool.ntp.org";
 const long  gmtOffset_sec = 3600;    // Offset for your timezone in seconds
-int   daylightOffset_sec = 3600;     // Offset for daylight saving time in seconds
-// TODO: add logic to switch between summer and winter time
+int   daylightOffset_sec = 3600;     // Offset for daylight saving time in seconds (starts with DST)
 WebServer server(80);
 
 
@@ -148,8 +147,8 @@ void houseKeeping(void * parameter) {
 // simple helper function which calculates time in seconds since 00:00:00 for modulo calculations (daily drift due to 70s cycle-length)
 int getCurrentTimeInSeconds() {
   time_t now = time(NULL);
-  struct tm *timeinfo = localtime(&now);
-  return timeinfo->tm_hour * 3600 + timeinfo->tm_min * 60 + timeinfo->tm_sec;
+  struct tm *timeCheck = localtime(&now);
+  return timeCheck->tm_hour * 3600 + timeCheck->tm_min * 60 + timeCheck->tm_sec;
 }
 
 
@@ -178,15 +177,37 @@ void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int
   Serial.println("Target time: " + String(targetHour) + ":" + String(targetMinute) + ":" + String(targetSecond));
   Serial.println("Waiting for target time...");
 
+  // wait until just before the target time is reached
   do {
     time(&now);
     currentTime = localtime(&now);
     Serial.print(".");
-    delay(500);
-  // we can use targetSecond -1 because if 0 is the target, it will be set to 59 in the previous block
+    delay(500); // half a second accuracy is good enough?
+  // we can safely use targetSecond -1 because if 0 is the target, it will be set to 59 in the previous block
   } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond - 1));
+}
 
-  // Execution will continue here at the target time (or just use it to delay the loop)
+
+//MARK: syncedStart()
+//MARK: check if this works
+// starts new cycle at proper time, adjusted for day of the week
+void syncedStart(){
+  time_t now;
+  time(&now);
+  // get current weekday
+  int weekday = localtime(&now)->tm_wday;   // tm_wday is 0-6 (0 = Sunday)
+  weekday = weekday == 0 ? 6 : weekday - 1; // convert to 0 = Monday
+  // retrieve the offset for the current day
+  int offset = weekdayOffsets[weekday];
+  // find next available start time
+  int currentTimeInSeconds = getCurrentTimeInSeconds();
+  int secondsToNextStart = offset - (currentTimeInSeconds % totalPhaseLength);
+  int nextStart = currentTimeInSeconds + secondsToNextStart;
+  int nextStartHour = nextStart / 3600;
+  int nextStartMinute = (nextStart % 3600) / 60;
+  int nextStartSecond = nextStart % 60;
+  // delay until next start time
+  delayUntil(nextStartHour, nextStartMinute, nextStartSecond);
 }
 
 
@@ -213,7 +234,7 @@ void setup() {
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   time_t now;
   time(&now);
-  while (localtime(&now)->tm_year == 70 ) {   // Wait until time is actually updated
+  while (localtime(&now)->tm_year == 70 ) {   // Wait until time is actually updated (this seems to be 60s by default)
     time(&now);
     delay(1000); 
   }
@@ -250,6 +271,9 @@ void loop() {
   switch (displayChoice) {
     case 1: // urbanKompass
 
+      // display the bike pictogram so even if waiting for the start, something is visible
+      dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // 31 seems to work perfectly! is at the very edge of the display, cutting off that one empty row from the bitmap
+
       // moved this here, because it's currently only relevant for the urbanKompass display
       if (startAtSpecificTime) {
         delayUntil(startHour, startMinute, startSecond);
@@ -263,9 +287,11 @@ void loop() {
       // functionality to sync at any time! 
       // because we might be switching between display options, killing the loop and restarting it
       if (changedDisplayChoice) { 
+        syncedStart(); // sync to next available start time
+
+        // old stuff below
         // sync to next available start time 
         // ...
-        //MARK: TODO
         // get current time
         // round up to closest 10s 
         // compare the modulo to the expected one for the weekday
@@ -280,9 +306,6 @@ void loop() {
         // Serial.println(drift); // still need to figure out how to use it 
         changedDisplayChoice = false; // reset the flag
       }
-
-
-      dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // 31 seems to work perfectly! is at the very edge of the display, cutting off that one empty row from the bitmap
       urbanKompassLoop(); // I decided not to call it with parametres, it just uses global variables as set above
       break;
     case 2: // airly
