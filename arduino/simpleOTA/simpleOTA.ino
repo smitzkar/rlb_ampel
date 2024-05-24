@@ -42,8 +42,9 @@ const char* host = "ampel";
 const char* ssid = "Rlb_Ampel";
 const char* password = "Rlb_Ampel<3";
 const char* ntpServer = "0.pool.ntp.org";
-const long  gmtOffset_sec = 3600;       // Offset for your timezone in seconds
-const int   daylightOffset_sec = 3600;  // Offset for daylight saving time in seconds
+const long  gmtOffset_sec = 3600;    // Offset for your timezone in seconds
+int   daylightOffset_sec = 3600;     // Offset for daylight saving time in seconds
+// TODO: add logic to switch between summer and winter time
 WebServer server(80);
 
 
@@ -75,22 +76,30 @@ int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on
 int weekdayOffsets[7] = {60, 40, 20, 0, 50, 30, 10}; // in seconds,(0 = Monday, 1 = Tuesday, etc.)
 
 
-//MARK: handleServer()
-// should rename this to houseKeeping() or such
+//MARK: houseKeeping()
 // Basically the housekeeping function
 // moved to separate core to ensure that even if the wifi function is stuck, the display will still update
-void handleServer(void * parameter) {
+void houseKeeping(void * parameter) {
   for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
 
-    // time keeping (to be moved to a separate function / file)
-    // Update the time from the NTP server every globalNtpUpdateInterval hours
+    // Update the time from the NTP server every globalNtpUpdateInterval hours 
     // TODO: use ticker library
     time_t now;
     time(&now); 
-    if (localtime(&now)->tm_hour % globalNtpUpdateInterval == 0 && lastNtpUpdate != localtime(&now)->tm_hour) {
+    int currentHour = localtime(&now)->tm_hour;
+    if (currentHour % globalNtpUpdateInterval == 0 && lastNtpUpdate != currentHour) {
       configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-      lastNtpUpdate = localtime(&now)->tm_hour;
+      lastNtpUpdate = currentHour;
       Serial.println("Synced to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
+    }
+
+    // Check if DST has changed and adjust the time accordingly
+    // not pretty, but it works
+    if (localtime(&now)->tm_mon == 3 && localtime(&now)->tm_mday == 31) {
+      daylightOffset_sec = 3600; // Offset for daylight saving time in seconds
+    }
+    if (localtime(&now)->tm_mon == 10 && localtime(&now)->tm_mday == 27) {
+      daylightOffset_sec = 0; // Offset for daylight saving time in seconds
     }
 
     // check if WiFi is still connected, attempt to reconnect if not. Not sure if this is necessary or if FreeROTS handles it, but it doesn't hurt to have it here.
@@ -213,7 +222,7 @@ void setup() {
   Serial.println(ctime(&now)); // Print the current time to the serial monitor
 
   // starts the two tasks/loops that are always running on specific cores
-  xTaskCreatePinnedToCore(handleServer, "Handle Server", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
+  xTaskCreatePinnedToCore(houseKeeping, "House-Keeping", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
   // xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 
 
