@@ -19,7 +19,7 @@ arduinoIDE > sketch > export compiled binary
 #include <WebServer.h>  // needs to be here for this part: WebServer server(80);
 #include "webpages.h"   // needs quotation marks if in same directory
 #include "time.h"
-#include "TickTwo.h" // to replace delay(): https://github.com/sstaub/TickTwo
+// #include "TickTwo.h" // to replace delay(): https://github.com/sstaub/TickTwo
 
 // custom files
 #include "connectToWifi.h"
@@ -32,12 +32,7 @@ arduinoIDE > sketch > export compiled binary
 #include "iterateAirlyBitmaps.h"
 #include "krueneWelle.h"
 
-/*
-Since I'm still struggling a bit with the FreeRTOS stuff: 
-> loop() as a Task: Treat loop() as a lower priority FreeRTOS task under the operating system's management.
-*/
-
-//MARK: CURRENTLY ACTIVE: 
+//MARK: CURRENTLY RUNNING ON AMPEL: 
 // "Change PINs"
 
 
@@ -49,6 +44,7 @@ const char* password = "Rlb_Ampel<3";
 const char* ntpServer = "0.pool.ntp.org";
 const long  gmtOffset_sec = 3600;       // Offset for your timezone in seconds
 const int   daylightOffset_sec = 3600;  // Offset for daylight saving time in seconds
+WebServer server(80);
 
 
 // TODO: refactor this into some stuct GlobalConfig for easier handling 
@@ -56,7 +52,7 @@ const int   daylightOffset_sec = 3600;  // Offset for daylight saving time in se
 int globalPhase1Length = 24; // in seconds
 int globalPhase2Length = 46;
 int totalPhaseLength = globalPhase1Length + globalPhase2Length;
-int globalTolerance = 3;
+int globalTolerance = 3; // not currently used
 //MARK: TODO:
 int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to the actual traffic light. (20s is 96m at 18km/h)
 
@@ -79,22 +75,6 @@ int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on
 int weekdayOffsets[7] = {60, 40, 20, 0, 50, 30, 10}; // in seconds,(0 = Monday, 1 = Tuesday, etc.)
 
 
-//MARK: Für die Testfelderöffnung
-// just some times I chose that will work
-bool openingDay = false; 
-int openingHour = 12;
-int openingMinute = 1;
-int openingSecond = 0;
-
-
-// WARNING: Do NOT use any sort of LED stuff for troubleshooting on the esp32 wired up to the Ampel!
-// built-in LED on the other one is power only
-// const int led = 13;     // ESP32 Pin to which onboard LED is connected
-// bool ledState = false;  // ledState used to set the LED (int LOW/HIGH is same as bool false/true for digitalWrite())
-
-WebServer server(80);
-
-
 //MARK: handleServer()
 // should rename this to houseKeeping() or such
 // Basically the housekeeping function
@@ -113,20 +93,20 @@ void handleServer(void * parameter) {
       Serial.println("Synced to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
     }
 
-    // check if WiFi is still connected, attempt to reconnect if so. Not sure if this is necessary or if FreeROTS handles it, but it doesn't hurt to have it here.
+    // check if WiFi is still connected, attempt to reconnect if not. Not sure if this is necessary or if FreeROTS handles it, but it doesn't hurt to have it here.
     if (WiFi.status() != WL_CONNECTED) {   
       connectToWiFiAndSetupMDNS(ssid, password, host);
     }
     // all the server stuff is handled in the serverSetup() function
     server.handleClient();
 
-    delay(1); // to prevent shenanigans
+    delay(1); // apparently this is good practice. Not sure, but I'll keep it for now
   }
 }
 
 
 // CAN'T THINK!!! redo this when the office is silent 
-// -> easier to use this to just call delayUntil() 
+// -> easier to use this to just call delayUntil() ?
 //MARK: dailyReset() (INACTIVE)
 // to replace syncToMinute()
 // Resets the display at a specific time every day to prevent time drift from potential inaccuracies 
@@ -164,38 +144,6 @@ int getCurrentTimeInSeconds() {
 }
 
 
-//MARK: syncToMinute() (OBSOLETE)
-// Checks current offset from the start of the minute. If within tolerance, returns the offset. Otherwise, delays until the start of the next minute. 
-// TODO: 
-// - add the delayFromTrafficlight as 2nd parameter? 
-// int syncToMinute(int tolerance) {
-//   time_t now;
-//   time(&now);
-//   struct tm* currentTime = localtime(&now);
-//   int seconds = currentTime->tm_sec;
-
-//   if (tolerance < seconds && seconds < (60 - tolerance)) {
-//     // Calculate the remaining seconds until the next minute (can't remember why I went with 59 instead of 60))
-//     int remainingSeconds = 59 - seconds;
-//     Serial.print("Syncing to minute. Starting in:");
-//     Serial.println(remainingSeconds);
-
-//     // Delay for the remaining time
-//     delay(remainingSeconds * 1000);
-//     Serial.println("Synced to minute");
-//     return 0;
-//   }
-//   // Could do this with ternary, but it's 2:55 am
-//   else {
-//     if (seconds <= 30){
-//       return seconds;
-//     }
-//     else {
-//       return 60 - seconds;
-//     }
-//   }
-// }
-
 //MARK: delayUntil
 // Delays until specified time, currently with a buffer of 1 second because of the early start of North traffic light
 // secondsBuffer isn't currently used
@@ -231,8 +179,6 @@ void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int
 
   // Execution will continue here at the target time (or just use it to delay the loop)
 }
-
-
 
 
 
