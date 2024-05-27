@@ -52,7 +52,6 @@ void fadeRow(int r, int g, int b, int i, float fadeRowTime, int targetFps = 30) 
     // delay() only accepts integers, so we need to round the float to the nearest integer. To account for the accumulation of the truncated decimals, we keep track of that error and add it to the next delay once it reaches a full millisecond.
     //MARK: TODO:
     // - needs to be adjusted to account for being too slow
-    // - needs to be adjusted to account for big errors (higher than 1)
     float delayTime_float = fadeRowTime / fadeSteps;
     int delayTime = static_cast<int>(delayTime_float);
     accumulatedError += delayTime_float - delayTime; 
@@ -152,7 +151,6 @@ void loop() {
   Serial.print("Start at:");
   unsigned long startTime = millis();
   Serial.println(startTime);
-  // put your main code here, to run repeatedly:
   urbanKompassLoop();
   completedCycles++;
   if (completedCycles % 10 == 0) {
