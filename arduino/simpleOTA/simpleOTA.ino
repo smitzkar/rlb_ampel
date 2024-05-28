@@ -47,7 +47,6 @@ const char* password = "Rlb_Ampel<3"; // NULL for Freifunk
 const char* ntpServer = "0.pool.ntp.org";
 const long  gmtOffset_sec = 3600;    // Offset for your timezone in seconds
 int   daylightOffset_sec = 3600;     // Offset for daylight saving time in seconds (starts with DST)
-WebServer server(80);
 
 
 // TODO: refactor this into some stuct GlobalConfig for easier handling 
@@ -72,6 +71,8 @@ int startHour = 18;
 int startMinute = 52; 
 int startSecond = 0;
 
+WebServer server(80);
+
 int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on the first loop iteration
 
 // HARDCODED array of offsets per day of the week (time in seconds % 70)
@@ -92,7 +93,7 @@ void houseKeeping(void * parameter) {
     int currentHour = localtime(&now)->tm_hour;
     if (currentHour % globalNtpUpdateInterval == 0 && lastNtpUpdate != currentHour) {
       configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-      lastNtpUpdate = currentHour;
+      lastNtpUpdate = currentHour; //this could be an issue!
       Serial.println("Synced to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
     }
 
@@ -231,15 +232,15 @@ void setup() {
   dma_display->begin();
   dma_display->setBrightness8(255); //0-255
 
+  //MARK: TESTING 
+  // put this here to show something when it first starts (because of the delayUntil() testing)
+  dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); 
+
   connectToWiFiAndSetupMDNS(ssid, password, host);   // initial connection to wifi and sets alternative IP -> http://"host".local
   serverSetup(); // this one starts the web server task, which handles all the OTA stuff
   // I'm not quite sure what happens when it's not connected, but so far that wasn't an issue.
 
-  Serial.println("Waiting for initial NTP sync... (Can take up to 2 minutes?)");
-
-  //MARK: TESTING 
-  // put this here to show something when it first starts (because of the delayUntil() testing)
-  dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); 
+  Serial.println("Waiting for initial NTP sync... (Can take a min or two)");
 
   // Configure NTP and sends first request for syncing the time (actually runs asynchronously in the background, handled by FreeRTOS?)
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
@@ -251,6 +252,9 @@ void setup() {
     Serial.println(test++);
     delay(1000); 
   }
+
+  // should probably reset the time here, now that the program knows the date
+  //MARK: DST, then reset time
 
   time(&now); 
   Serial.println(ctime(&now)); // Print the current time to the serial monitor

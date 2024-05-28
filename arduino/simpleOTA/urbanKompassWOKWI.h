@@ -194,6 +194,9 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
 //MARK: loop
 void urbanKompassLoop() {
 
+  // test if this somehow got added to bin
+  Serial.println("THIS SHOULD NOT BE SHOWING UP!");
+
   // keep this here or not?
   // dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // draw bike pictogram
 
