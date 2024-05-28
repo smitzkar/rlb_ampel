@@ -32,15 +32,18 @@ arduinoIDE > sketch > export compiled binary
 #include "iterateAirlyBitmaps.h"
 #include "krueneWelle.h"
 
-//MARK: CURRENTLY RUNNING ON AMPEL: 
-// "Change PINs"
+//MARK: RUNNING ON AMPEL: 
+// "Change PINs" (worked, but with bad timer)
+// the currently active one here 2024-05-27 18:20
+// seems to just constantly restart green phase, also no longer reachable via webserver
 
 
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
 const char* host = "ampel";
-const char* ssid = "Rlb_Ampel";
-const char* password = "Rlb_Ampel<3";
+const char* ssid = "Rlb_Ampel"; // "Freifunk" for Freifunk?
+const char* password = "Rlb_Ampel<3"; // NULL for Freifunk
+// for use with Freifunk, simply omit the password
 const char* ntpServer = "0.pool.ntp.org";
 const long  gmtOffset_sec = 3600;    // Offset for your timezone in seconds
 int   daylightOffset_sec = 3600;     // Offset for daylight saving time in seconds (starts with DST)
@@ -59,6 +62,7 @@ int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to t
 int globalNtpUpdateInterval = 6; // in hours, how often it syncs the internal clock to the NTP server
 int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
 bool changedDisplayChoice = false; // to see if the display choice was changed during runtime
+//MARK: changedDisplayChoice needs to be set true for the fist run, so it syncs to the next available start time
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
 bool animationDirection = true; // false is the original top down. using a boolean to keep it simple
 
@@ -182,7 +186,7 @@ void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int
     time(&now);
     currentTime = localtime(&now);
     Serial.print(".");
-    delay(500); // half a second accuracy is good enough?
+    delay(100); // 1/10th of a second accuracy is good enough?
   // we can safely use targetSecond -1 because if 0 is the target, it will be set to 59 in the previous block
   } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond - 1));
 }
@@ -199,9 +203,10 @@ void syncedStart(){
   weekday = weekday == 0 ? 6 : weekday - 1; // convert to 0 = Monday
   // retrieve the offset for the current day
   int offset = weekdayOffsets[weekday];
+  if (offset == 0) offset = 60; // to get to next one
   // find next available start time
   int currentTimeInSeconds = getCurrentTimeInSeconds();
-  int secondsToNextStart = offset - (currentTimeInSeconds % totalPhaseLength);
+  int secondsToNextStart = offset - (currentTimeInSeconds % totalPhaseLength); // this doesn't make sense
   int nextStart = currentTimeInSeconds + secondsToNextStart;
   int nextStartHour = nextStart / 3600;
   int nextStartMinute = (nextStart % 3600) / 60;
@@ -229,6 +234,8 @@ void setup() {
   connectToWiFiAndSetupMDNS(ssid, password, host);   // initial connection to wifi and sets alternative IP -> http://"host".local
   serverSetup(); // this one starts the web server task, which handles all the OTA stuff
   // I'm not quite sure what happens when it's not connected, but so far that wasn't an issue.
+
+  Serial.println("Waiting for initial NTP sync... (Can take up to 2 minutes?)");
 
   // Configure NTP and sends first request for syncing the time (actually runs asynchronously in the background, handled by FreeRTOS?)
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);

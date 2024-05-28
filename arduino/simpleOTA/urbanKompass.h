@@ -56,7 +56,7 @@ void fadeRow(int r, int g, int b, int i, float fadeRowTime, int targetFps = 30) 
   for (int j = 1; j <= fadeSteps; j++) {
 
     // Check if the command to stop the display has been received. If so, clear the display and return. I placed it here, so that it would be as responsible as possible.
-  if (stopDisplay) return; 
+    if (stopDisplay) return; 
 
     int fadedR = (fadeSteps - j) * r / fadeSteps; // order of operations is crucial here, to make proper use of integer division
     int fadedG = (fadeSteps - j) * g / fadeSteps;
@@ -125,9 +125,18 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
     }
   }
 
+  // check the runtime of the phase and adjust if necessary
+  // currently only accounts for it being too fast, not too slow, but the difference should be minimal and be caught on the next NTP sync in houseKeeping()
+  // maybe with the adjustments above it now is an issue if slow? 
+  int actualDuration = millis() - startTime;
+  int error = (globalPhase1Length+globalPhase2Length) - actualDuration;
+  if (error > 0) {
+    delay(error - 2); // do (error - 2)? Better to be a bit too fast than too slow -> can be fixed with a simple delay in the main loop
+  }  
   Serial.print("Phase runtime:");
+  Serial.println(actualDuration);
+  Serial.print("Adjusted runtime:");
   Serial.println(millis() - startTime);
-  return millis() - startTime; // return the total runtime of the function
 }
 
 //MARK: loop
@@ -141,8 +150,12 @@ void urbanKompassLoop() {
   drawAndFadeRectangle(0, 255, 0, rows, globalPhase1Length); // for green
   // syncToMinute here? to avoid 70s cycle skipping a minute every now and then
 
+  Serial.println("Phase 1 done");
+
   // kind of silly to add this twice, but this is the easiest way 
   if (stopDisplay) return; // needs to be return if this isn't main loop
+
+  Serial.println("Phase 2");
 
   drawAndFadeRectangle(255, 0, 0, rows, globalPhase2Length); // for red
 

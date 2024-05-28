@@ -14,6 +14,7 @@ Renamed to urbanKompass.h, to show that Ks worked on it :)
 // TODO: should probably put this in a struct
 int globalPhase1Length = 24; // in seconds
 int globalPhase2Length = 46;
+int totalPhaseLength = globalPhase1Length + globalPhase2Length; // total length of the cycle in seconds
 int globalTolerance;
 int globalNtpUpdateInterval; // in minutes
 int displayChoice; // 1 = urbanKompass, 2 = iterateBitmaps, 
@@ -25,6 +26,76 @@ int completedCycles = 0;
 // where to start the rectangle (32 from phantom half matrix, 23 from bike pictogram) (was originally 55)
 // firstRow + rows should be 128 (total "width" of the display, including phantom matrix)
 int firstRow = 54; 
+
+int weekdayOffsets[7] = {60, 40, 20, 0, 50, 30, 10}; // in seconds,(0 = Monday, 1 = Tuesday, etc.)
+
+//MARK: getCurrentTimeInSeconds()
+// simple helper function which calculates time in seconds since 00:00:00 for modulo calculations (daily drift due to 70s cycle-length)
+int getCurrentTimeInSeconds() {
+  time_t now = time(NULL);
+  struct tm *timeCheck = localtime(&now);
+  return timeCheck->tm_hour * 3600 + timeCheck->tm_min * 60 + timeCheck->tm_sec;
+}
+
+
+//MARK: delayUntil
+// Delays until specified time, currently with a buffer of 1 second because of the early start of North traffic light
+// secondsBuffer isn't currently used
+void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int targetSecond, unsigned int secondsBuffer = 0) {
+  time_t now;
+  struct tm* currentTime;
+
+  targetSecond = targetSecond > 59 ? 59 : targetSecond % 60; // Just in case someone doesn't understand time
+
+  // Adjusts the target time for the early start of north traffic light
+  if (targetSecond == 0) {
+    targetSecond = 60 - 1; // not sure why, but it kept being off by one second, so I'm compensating for that here 
+    if (targetMinute == 0) {
+      targetMinute = 59;
+      // still getting used to ternary operator. 
+      // targetHour is set to:(if targetHour is 0, set it to 23, otherwise set it to targetHour - 1)
+      targetHour = targetHour == 0 ? 23 : targetHour - 1; 
+    } else {
+      targetMinute -= 1;
+    }
+  }
+
+  Serial.println("Target time: " + String(targetHour) + ":" + String(targetMinute) + ":" + String(targetSecond));
+  Serial.println("Waiting for target time...");
+
+  // wait until just before the target time is reached
+  do {
+    time(&now);
+    currentTime = localtime(&now);
+    Serial.print(".");
+    delay(500); // half a second accuracy is good enough?
+  // we can safely use targetSecond -1 because if 0 is the target, it will be set to 59 in the previous block
+  } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond - 1));
+}
+
+
+//MARK: syncedStart()
+//MARK: check if this works
+// starts new cycle at proper time, adjusted for day of the week
+void syncedStart(){
+  time_t now;
+  time(&now);
+  // get current weekday
+  int weekday = localtime(&now)->tm_wday;   // tm_wday is 0-6 (0 = Sunday)
+  weekday = weekday == 0 ? 6 : weekday - 1; // convert to 0 = Monday
+  // retrieve the offset for the current day
+  int offset = weekdayOffsets[weekday];
+  if (offset == 0) offset = 60; // to get to next one
+  // find next available start time
+  int currentTimeInSeconds = getCurrentTimeInSeconds();
+  int secondsToNextStart = offset - (currentTimeInSeconds % totalPhaseLength);
+  int nextStart = currentTimeInSeconds + secondsToNextStart;
+  int nextStartHour = nextStart / 3600;
+  int nextStartMinute = (nextStart % 3600) / 60;
+  int nextStartSecond = nextStart % 60;
+  // delay until next start time
+  delayUntil(nextStartHour, nextStartMinute, nextStartSecond);
+}
 
 
 // This function fades a single row from the given color to black over duration in milliseconds and adjusts the number of iterations to a target fps (default 30).
@@ -111,7 +182,7 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
   int actualDuration = millis() - startTime;
   int error = duration - actualDuration;
   if (error > 0) {
-    delay(error); // do (error - 1)? Better to be a bit too fast than too slow -> can be fixed with a simple delay in the main loop
+    delay(error - 2); // do (error - 2)? Better to be a bit too fast than too slow -> can be fixed with a simple delay in the main loop
   }  
   Serial.print("Phase runtime:");
   Serial.println(actualDuration);
@@ -145,12 +216,18 @@ void setup() {
   // put your setup code here, to run once:
   Serial.begin(115200);
   Serial.println("Hello, ESP32!");
+  time_t now;
+  time(&now);
+  Serial.println("Clock time: " + String(ctime(&now))); // Print the current time to the serial monitor
 }
 
 void loop() {
   Serial.print("Start at:");
   unsigned long startTime = millis();
   Serial.println(startTime);
+
+  syncedStart();
+
   urbanKompassLoop();
   completedCycles++;
   if (completedCycles % 10 == 0) {
