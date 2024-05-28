@@ -277,6 +277,8 @@ void loop() {
   // int currentOffset = 0;
   // int drift = 0;
 
+  Serial.println("New main loop run");
+
   stopDisplay = false;        // reset the stopDisplay variable 
   dma_display->clearScreen(); // tabula rasa
 
