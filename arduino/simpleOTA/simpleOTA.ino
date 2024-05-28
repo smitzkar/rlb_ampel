@@ -60,7 +60,7 @@ int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to t
 
 int globalNtpUpdateInterval = 6; // in hours, how often it syncs the internal clock to the NTP server
 int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
-bool changedDisplayChoice = false; // to see if the display choice was changed during runtime
+bool changedDisplayChoice = true; // to see if the display choice was changed during runtime
 //MARK: changedDisplayChoice needs to be set true for the fist run, so it syncs to the next available start time
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
 bool animationDirection = true; // false is the original top down. using a boolean to keep it simple
@@ -186,7 +186,6 @@ void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int
   do {
     time(&now);
     currentTime = localtime(&now);
-    Serial.print(".");
     delay(100); // 1/10th of a second accuracy is good enough?
   // we can safely use targetSecond -1 because if 0 is the target, it will be set to 59 in the previous block
   } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond - 1));
@@ -194,7 +193,6 @@ void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int
 
 
 //MARK: syncedStart()
-//MARK: check if this works
 // starts new cycle at proper time, adjusted for day of the week
 void syncedStart(){
   time_t now;
@@ -207,7 +205,9 @@ void syncedStart(){
   if (offset == 0) offset = 60; // to get to next one
   // find next available start time
   int currentTimeInSeconds = getCurrentTimeInSeconds();
-  int secondsToNextStart = offset - (currentTimeInSeconds % totalPhaseLength); // this doesn't make sense
+  int secondsToNextStart = offset - (currentTimeInSeconds % totalPhaseLength); 
+  if (secondsToNextStart <= 0) secondsToNextStart += totalPhaseLength; // if it's already past the start time or very close to it
+
   int nextStart = currentTimeInSeconds + secondsToNextStart;
   int nextStartHour = nextStart / 3600;
   int nextStartMinute = (nextStart % 3600) / 60;
@@ -250,6 +250,7 @@ void setup() {
   while (localtime(&now)->tm_year == 70 ) {   // Wait until time is actually updated (this seems to be 60s by default)
     time(&now);
     Serial.println(test++);
+    Serial.println(ctime(&now));
     delay(1000); 
   }
 
@@ -270,6 +271,10 @@ void setup() {
 void loop() {
   // maybe remove the updateDisplay function and just put it in here
 
+  if (changedDisplayChoice) {
+    Serial.println("Display choice changed!");
+  }
+
   // needs to be initialised (with value!) outside of switch case
   time_t now;
   time(&now);
@@ -277,7 +282,8 @@ void loop() {
   // int currentOffset = 0;
   // int drift = 0;
 
-  Serial.println("New main loop run");
+  Serial.println("Starting new main loop run at:");
+  Serial.println(ctime(&now)); // Print the current time to the serial monitor
 
   stopDisplay = false;        // reset the stopDisplay variable 
   dma_display->clearScreen(); // tabula rasa

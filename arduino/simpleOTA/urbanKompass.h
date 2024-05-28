@@ -107,17 +107,17 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
   duration *= 1000; // convert to milliseconds
 
   unsigned long startTime = millis();
-  Serial.print("Start time:");
-  Serial.println(startTime);
-  Serial.print("Duration:");
-  Serial.println(duration);
-  Serial.print("Rows:");
-  Serial.println(rows);
+  // Serial.print("Start time:");
+  // Serial.println(startTime);
+  // Serial.print("Duration:");
+  // Serial.println(duration);
+  // Serial.print("Rows:");
+  // Serial.println(rows);
   float fadeRowTime = duration * 1.0 / rows; // calculate the time for each row to fade. needs to be cast to float to avoid integer division (and truncating decimals)
   // this NEEDS to NOT be unsigned long, as that's an integer and we want to keep the decimals!
 
-  Serial.print("Fade row time:");
-  Serial.println(fadeRowTime);
+  // Serial.print("Fade row time:");
+  // Serial.println(fadeRowTime);
 
   dma_display->fillRect(firstRow, 0, rows, 32, dma_display->color565(r, g, b)); //draw full rectangle // playing with 1st parameter, original = 55
 
@@ -134,12 +134,10 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
   // check the runtime of the phase and adjust if necessary
   // currently only accounts for it being too fast, not too slow, but the difference should be minimal and be caught on the next NTP sync in houseKeeping()
   // maybe with the adjustments above it now is an issue if slow? 
-  Serial.print("End time:");
-  Serial.println(millis());
   int actualDuration = millis() - startTime;
   int error = duration - actualDuration;
   if (error > 0) {
-    Serial.print("Error:");
+    Serial.print("Calculated error:");
     Serial.println(error);
     delay(error); // Better to be a bit too fast than too slow -> can be fixed with a simple delay in the main loop
   }  
@@ -148,13 +146,11 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
   Serial.print("Adjusted runtime:");
   Serial.println(millis() - startTime);
 
-  return 0;
+  return error; // THIS IS REQUIRED if using "int drawAnd..."
 }
 
 //MARK: loop
 void urbanKompassLoop() {
-
-  Serial.println("Starting urbanKompassLoop");
 
   // keep this here or not?
   dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // draw bike pictogram
