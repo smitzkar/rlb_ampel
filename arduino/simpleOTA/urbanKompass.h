@@ -131,7 +131,7 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
   int actualDuration = millis() - startTime;
   int error = (globalPhase1Length+globalPhase2Length) - actualDuration;
   if (error > 0) {
-    delay(error - 2); // do (error - 2)? Better to be a bit too fast than too slow -> can be fixed with a simple delay in the main loop
+    delay(error); // Better to be a bit too fast than too slow -> can be fixed with a simple delay in the main loop
   }  
   Serial.print("Phase runtime:");
   Serial.println(actualDuration);

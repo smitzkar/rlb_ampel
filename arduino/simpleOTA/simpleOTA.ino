@@ -237,12 +237,18 @@ void setup() {
 
   Serial.println("Waiting for initial NTP sync... (Can take up to 2 minutes?)");
 
+  //MARK: TESTING 
+  // put this here to show something when it first starts (because of the delayUntil() testing)
+  dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); 
+
   // Configure NTP and sends first request for syncing the time (actually runs asynchronously in the background, handled by FreeRTOS?)
   configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
   time_t now;
   time(&now);
+  int test = 0;
   while (localtime(&now)->tm_year == 70 ) {   // Wait until time is actually updated (this seems to be 60s by default)
     time(&now);
+    Serial.println(test++);
     delay(1000); 
   }
 
@@ -253,11 +259,6 @@ void setup() {
   xTaskCreatePinnedToCore(houseKeeping, "House-Keeping", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
   // xTaskCreatePinnedToCore(updateDisplay, "Update Display", 10000, NULL, 1, NULL, 1);  // 2nd Core 
 
-
-
-  //MARK: TESTING 
-  // put this here to show something when it first starts (because of the delayUntil() testing)
-  dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); 
 
 }
 
