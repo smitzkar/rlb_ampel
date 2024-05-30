@@ -37,6 +37,12 @@ arduinoIDE > sketch > export compiled binary
 // the currently active one here 2024-05-27 18:20
 // seems to just constantly restart green phase, also no longer reachable via webserver
 
+// 2024-05-30 14:46:46 to green  47:10 to red 
+// should have been 14:46:40 to green  
+// trying to restart over webinterface -> started at 14:50:00 -> 53400%70 = 60 (Monday, should have been 0)
+// 52:20 
+
+
 
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
@@ -44,7 +50,7 @@ const char* host = "ampel";
 const char* ssid = "Rlb_Ampel"; // "Freifunk" for Freifunk?
 const char* password = "Rlb_Ampel<3"; // NULL for Freifunk
 // for use with Freifunk, simply omit the password
-const char* ntpServer = "0.pool.ntp.org";
+const char* ntpServer = "0.pool.ntp.org"; // change to pool.ntp.org ? Maybe smarter to let it figure out the best one itself.
 const long  gmtOffset_sec = 3600;    // Offset for your timezone in seconds
 int   daylightOffset_sec = 3600;     // Offset for daylight saving time in seconds (starts with DST)
 
@@ -60,8 +66,8 @@ int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to t
 
 int globalNtpUpdateInterval = 6; // in hours, how often it syncs the internal clock to the NTP server
 int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
-bool changedDisplayChoice = true; // to see if the display choice was changed during runtime
-//MARK: changedDisplayChoice needs to be set true for the fist run, so it syncs to the next available start time
+bool changedDisplayChoice = false; // to see if the display choice was changed during runtime
+bool forceSync = true; // start with true to make sure that it syncs urbanKompass on first run
 bool stopDisplay = false; // used to interupt the display loop. Not currently being used
 bool animationDirection = true; // false is the original top down. using a boolean to keep it simple
 
@@ -95,6 +101,7 @@ void houseKeeping(void * parameter) {
       configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
       lastNtpUpdate = currentHour; //this could be an issue!
       Serial.println("Synced to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
+      forceSync = true; // forceSync in loop for urbanKompass
     }
 
     // Check if DST has changed and adjust the time accordingly
@@ -202,7 +209,7 @@ void syncedStart(){
   weekday = weekday == 0 ? 6 : weekday - 1; // convert to 0 = Monday
   // retrieve the offset for the current day
   int offset = weekdayOffsets[weekday];
-  if (offset == 0) offset = 60; // to get to next one
+  if (offset == 0) offset = 70; // to get to next one 
   // find next available start time
   int currentTimeInSeconds = getCurrentTimeInSeconds();
   int secondsToNextStart = offset - (currentTimeInSeconds % totalPhaseLength); 
@@ -306,7 +313,8 @@ void loop() {
       //MARK: IMPORTANT
       // functionality to sync at any time! 
       // because we might be switching between display options, killing the loop and restarting it
-      if (changedDisplayChoice) { 
+      // also to force regular syncing (currently to internal clock only)
+      if (changedDisplayChoice || forceSync) { 
         syncedStart(); // sync to next available start time
 
         // old stuff below
@@ -324,7 +332,8 @@ void loop() {
         // drift = weekdayOffsets[localtime(&now)->tm_wday] - currentOffset; // in seconds
         // Serial.print("Drift: ");
         // Serial.println(drift); // still need to figure out how to use it 
-        changedDisplayChoice = false; // reset the flag
+        changedDisplayChoice = false; // reset the flags
+        forceSync = false;
       }
       urbanKompassLoop(); // I decided not to call it with parametres, it just uses global variables as set above
       break;
