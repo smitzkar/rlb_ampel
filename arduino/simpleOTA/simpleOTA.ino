@@ -36,6 +36,7 @@ arduinoIDE > sketch > export compiled binary
 // "Change PINs" (worked, but with bad timer)
 // the currently active one here 2024-05-27 18:20
 // seems to just constantly restart green phase, also no longer reachable via webserver
+// 2024-05-30 15:12 "Fix syncedStart logical error..."
 
 // 2024-05-30 14:46:46 to green  47:10 to red 
 // should have been 14:46:40 to green  
@@ -47,8 +48,8 @@ arduinoIDE > sketch > export compiled binary
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
 const char* host = "ampel";
-const char* ssid = "Rlb_Ampel"; // "Freifunk" for Freifunk?
-const char* password = "Rlb_Ampel<3"; // NULL for Freifunk
+const char* ssid = "berlin.freifunk.net"; // "radbahn.freifunk.berlin"; // "Rlb_Ampel"; // "Freifunk" for Freifunk?
+const char* password = NULL; // ""; // "Rlb_Ampel<3"; // NULL for Freifunk
 // for use with Freifunk, simply omit the password
 const char* ntpServer = "0.pool.ntp.org"; // change to pool.ntp.org ? Maybe smarter to let it figure out the best one itself.
 const long  gmtOffset_sec = 3600;    // Offset for your timezone in seconds

@@ -8,7 +8,11 @@
 #include <ESPmDNS.h>
 
 void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const char* host) {
-  WiFi.begin(ssid, password);
+  if (password == NULL) {
+    WiFi.begin(ssid);
+  } else {
+    WiFi.begin(ssid, password);
+  }
   Serial.println("Connecting...");
 
   while (WiFi.status() != WL_CONNECTED) {
