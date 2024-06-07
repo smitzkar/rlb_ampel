@@ -47,10 +47,18 @@ arduinoIDE > sketch > export compiled binary
 
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
+//TODO: add option to automatically switch between Freifunk and Rlb_Ampel -> force hotspot if available, continuously check
 const char* host = "ampel";
 const char* ssid = "berlin.freifunk.net"; // "radbahn.freifunk.berlin"; // "Rlb_Ampel"; // "Freifunk" for Freifunk?
 const char* password = NULL; // ""; // "Rlb_Ampel<3"; // NULL for Freifunk
 // for use with Freifunk, simply omit the password
+
+// can't access webserver at 17:30  
+// no clue why. might be due to some client protection stuff on the public wifi 
+// -> how to handle this?
+// 1) add function to continuously check if hotspot seen, switch to it if so 
+// 2) for troubleshooting, add little pixel display to see if connected to wifi
+
 const char* ntpServer = "0.pool.ntp.org"; // change to pool.ntp.org ? Maybe smarter to let it figure out the best one itself.
 const long  gmtOffset_sec = 3600;    // Offset for your timezone in seconds
 int   daylightOffset_sec = 3600;     // Offset for daylight saving time in seconds (starts with DST)
@@ -84,7 +92,7 @@ int lastNtpUpdate = -1; // Initialised to an invalid value to force an update on
 
 // HARDCODED array of offsets per day of the week (time in seconds % 70)
 // TODO: need to create a proper function to be adaptable to other phaselenghts
-int weekdayOffsets[7] = {60, 40, 20, 0, 50, 30, 10}; // in seconds,(0 = Monday, 1 = Tuesday, etc.)
+int weekdayOffsets[7] = {60, 40, 20, 0, 50, 30, 10}; // in seconds,(0 = Monday, 1 = Tuesday, etc.), offset 0 == 70 
 
 
 //MARK: houseKeeping()
@@ -95,6 +103,7 @@ void houseKeeping(void * parameter) {
 
     // Update the time from the NTP server every globalNtpUpdateInterval hours 
     // TODO: use ticker library
+    //TODO: use forceSync every hour to sync to internal clock? or just do it every x cycles? -> easier!
     time_t now;
     time(&now); 
     int currentHour = localtime(&now)->tm_hour;
@@ -298,7 +307,6 @@ void loop() {
 
   switch (displayChoice) {
     case 1: // urbanKompass
-
       // display the bike pictogram so even if waiting for the start, something is visible
       dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // 31 seems to work perfectly! is at the very edge of the display, cutting off that one empty row from the bitmap
 
@@ -318,21 +326,6 @@ void loop() {
       if (changedDisplayChoice || forceSync) { 
         syncedStart(); // sync to next available start time
 
-        // old stuff below
-        // sync to next available start time 
-        // ...
-        // get current time
-        // round up to closest 10s 
-        // compare the modulo to the expected one for the weekday
-        // timeInSeconds = getCurrentTimeInSeconds(); 
-        // currentOffset = timeInSeconds % totalPhaseLength; // 70s cycle
-        // compare to the expected offset for the day of the week
-        // figure out next available start time
-        // delayUntil(nextAvailableHour, nextAvailableMinute, nextAvailableSecond);
-        // // calculate drift for QA?
-        // drift = weekdayOffsets[localtime(&now)->tm_wday] - currentOffset; // in seconds
-        // Serial.print("Drift: ");
-        // Serial.println(drift); // still need to figure out how to use it 
         changedDisplayChoice = false; // reset the flags
         forceSync = false;
       }
