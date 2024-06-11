@@ -43,6 +43,7 @@ arduinoIDE > sketch > export compiled binary
 // trying to restart over webinterface -> started at 14:50:00 -> 53400%70 = 60 (Monday, should have been 0)
 // 52:20 
 
+int globalTestCounter = 0; // just for testing purposes
 
 
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
@@ -308,6 +309,27 @@ void loop() {
 
   switch (displayChoice) {
     case 1: // urbanKompass
+
+      if (globalTestCounter == 0) { // only for testing purposes
+        Serial.println("==================================");
+        Serial.println("Initialising first test cycle... ");
+        syncedStart(); // sync to next available start time
+        Serial.println("Forced sync");
+        changedDisplayChoice = false; // reset the flags
+        forceSync = false;
+
+        Serial.println("Starting new test cycle at: ");
+        time(&now);
+        Serial.println(ctime(&now));
+      }
+      if (globalTestCounter == 51) { // only for testing purposes
+        Serial.println("==================================");
+        Serial.println("51 cycles completed at: ");
+        time(&now);
+        Serial.println(ctime(&now));
+      }
+      globalTestCounter++;
+
       // display the bike pictogram so even if waiting for the start, something is visible
       dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // 31 seems to work perfectly! is at the very edge of the display, cutting off that one empty row from the bitmap
 
