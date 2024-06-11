@@ -49,8 +49,8 @@ arduinoIDE > sketch > export compiled binary
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
 //TODO: add option to automatically switch between Freifunk and Rlb_Ampel -> force hotspot if available, continuously check
 const char* host = "ampel";
-const char* ssid = "berlin.freifunk.net"; // "radbahn.freifunk.berlin"; // "Rlb_Ampel"; // "Freifunk" for Freifunk?
-const char* password = NULL; // ""; // "Rlb_Ampel<3"; // NULL for Freifunk
+const char* ssid = "one_solution_revolution"; // "radbahn.freifunk.berlin"; // "Rlb_Ampel"; // "Freifunk" for Freifunk?
+const char* password = "Lady_pluS_45"; // ""; // "Rlb_Ampel<3"; // NULL for Freifunk
 // for use with Freifunk, simply omit the password
 
 // can't access webserver at 17:30  
@@ -107,15 +107,18 @@ void houseKeeping(void * parameter) {
     time_t now;
     time(&now); 
     int currentHour = localtime(&now)->tm_hour;
-    if (currentHour % globalNtpUpdateInterval == 0 && lastNtpUpdate != currentHour) {
-      configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
-      lastNtpUpdate = currentHour; //this could be an issue!
-      Serial.println("Synced to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
+    if (currentHour != lastNtpUpdate) { // rewritten to forceSync every hour
+      if (currentHour % globalNtpUpdateInterval == 0) { // only sync every globalNtpUpdateInterval hours
+        configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+        Serial.println("Synced to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
+      }
+      lastNtpUpdate = currentHour; // this could be an issue? // don't remember why
       forceSync = true; // forceSync in loop for urbanKompass
     }
 
     // Check if DST has changed and adjust the time accordingly
     // not pretty, but it works
+    // should this be at the beginning of the loop?
     if (localtime(&now)->tm_mon == 3 && localtime(&now)->tm_mday == 31) {
       daylightOffset_sec = 3600; // Offset for daylight saving time in seconds
     }
@@ -234,7 +237,7 @@ void syncedStart(){
 }
 
 
-
+/*===========================================================================*/
 
 
 //MARK: setup
@@ -249,7 +252,6 @@ void setup() {
   dma_display->begin();
   dma_display->setBrightness8(255); //0-255
 
-  //MARK: TESTING 
   // put this here to show something when it first starts (because of the delayUntil() testing)
   dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); 
 
@@ -271,11 +273,10 @@ void setup() {
     delay(1000); 
   }
 
-  // should probably reset the time here, now that the program knows the date
-  //MARK: DST, then reset time
+  // could do DST check and reset time, but decided that it wasn't worth it -> gets done in houseKeeping() and only happens twice a year
 
   time(&now); 
-  Serial.println(ctime(&now)); // Print the current time to the serial monitor
+  Serial.println("Initial NTP sync and setup complete at: " + String(ctime(&now))); 
 
   // starts the two tasks/loops that are always running on specific cores
   xTaskCreatePinnedToCore(houseKeeping, "House-Keeping", 10000, NULL, 1, NULL, 0);    // 1st Core (last parameter)
@@ -289,7 +290,7 @@ void loop() {
   // maybe remove the updateDisplay function and just put it in here
 
   if (changedDisplayChoice) {
-    Serial.println("Display choice changed!");
+    Serial.println("Display option changed!");
   }
 
   // needs to be initialised (with value!) outside of switch case
@@ -297,7 +298,7 @@ void loop() {
   time(&now);
   // int timeInSeconds = 0;
   // int currentOffset = 0;
-  // int drift = 0;
+  // int drift = 0; 
 
   Serial.println("Starting new main loop run at:");
   Serial.println(ctime(&now)); // Print the current time to the serial monitor
@@ -325,6 +326,7 @@ void loop() {
       // also to force regular syncing (currently to internal clock only)
       if (changedDisplayChoice || forceSync) { 
         syncedStart(); // sync to next available start time
+        Serial.println("Forced sync");
 
         changedDisplayChoice = false; // reset the flags
         forceSync = false;
