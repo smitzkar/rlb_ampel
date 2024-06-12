@@ -326,7 +326,7 @@ void setup() {
   // put this here to show something when it first starts (because of the delayUntil() testing)
   dma_display->drawBitmap(32, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); 
 
-  connectToWiFiAndSetupMDNS(ssid, password, host);   // initial connection to wifi and sets alternative IP -> http://"host".local
+  connectToWiFiAndSetupMDNS(ssid, password, host, /*initialConnection*/ true);   // initial connection to wifi and sets alternative IP -> http://"host".local
   serverSetup(); // this one starts the web server task, which handles all the OTA stuff
   // I'm not quite sure what happens when it's not connected, but so far that wasn't an issue.
 

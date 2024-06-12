@@ -7,7 +7,7 @@
 #include <WiFi.h>
 #include <ESPmDNS.h>
 
-void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const char* host) {
+void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const char* host, bool initialConnection = false) {
   if (password == NULL) {
     WiFi.begin(ssid);
   } else {
@@ -16,14 +16,17 @@ void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const cha
   Serial.println("Connecting...");
 
   int counter = 0;
+  if (initialConnection){
+    counter = 31; // if it's the first setup, it NEEDS to connect, so will try until it does
+  }
 
-  while (WiFi.status() != WL_CONNECTED && counter < 120) { // lets this only run 1min at a time
+  while (WiFi.status() != WL_CONNECTED && counter != 20) { // lets this only run 10s at a time
     delay(500);
     Serial.print(".");
     counter++;
   }
 
-  if (counter == 120) {
+  if (counter == 20) {
     Serial.println("Connection attempt failed.");
     return;
   }
