@@ -127,7 +127,7 @@ void houseKeeping(void * parameter) {
     int currentHour = localtime(&now)->tm_hour;
     bool flag = false;
 
-    if (currentMinute != lastRestart && currentMinute%10 == 0){ // every 10min
+    if (currentMinute != lastRestart && currentMinute == 0){ // every hour
       lastRestart = currentMinute;
       forceSync = true;
       stopDisplay = true;
@@ -135,7 +135,7 @@ void houseKeeping(void * parameter) {
     }
     // no clue why this messes with the above, but can't have it in there
     // only messes with it if not connected to wifi? -> with spotty Freifunk and no real way to communicate ota on it (as of yet), maybe just stick to using the hotspot every now and then...
-    if (flag && currentMinute % 20 == 0){ // flag because of above. WHAT A MESS!!
+    if (flag && currentHour % 6 == 0){ // sync every 6 hours // flag because of above. WHAT A MESS!!
       flag = false;
       configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
       Serial.println("Synced (or tried to) to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
