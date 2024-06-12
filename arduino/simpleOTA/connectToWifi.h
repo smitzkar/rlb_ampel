@@ -22,7 +22,6 @@ void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const cha
 
   while (WiFi.status() != WL_CONNECTED && counter != 20) { // lets this only run 10s at a time
     delay(500);
-    Serial.print(".");
     counter++;
   }
 
