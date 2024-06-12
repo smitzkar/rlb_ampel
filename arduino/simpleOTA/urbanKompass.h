@@ -10,7 +10,6 @@ Renamed to urbanKompass.h, to show that Ks worked on it :)
 
 // Get this from main.ino (currently simpleOTA.ino)
 // TODO: should probably put this in a struct
-extern bool stopDisplay;
 extern int globalPhase1Length; // in seconds
 extern int globalPhase2Length;
 extern int globalTolerance;
@@ -124,10 +123,12 @@ int drawAndFadeRectangle(int r, int g, int b, size_t rows, unsigned int duration
   if (!animationDirection) { // Top-down animation
     for (size_t i = 0; i < rows; i++) {
       fadeRow(r, g, b, i, fadeRowTime);
+      if (stopDisplay) return 1; // 
     }
   } else { // Bottom-up animation
     for (size_t i = rows; i > 0; i--) {
       fadeRow(r, g, b, i - 1, fadeRowTime); 
+      if (stopDisplay) return 1; // 
     }
   }
 
