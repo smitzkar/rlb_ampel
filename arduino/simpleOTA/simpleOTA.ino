@@ -43,6 +43,22 @@ arduinoIDE > sketch > export compiled binary
 // trying to restart over webinterface -> started at 14:50:00 -> 53400%70 = 60 (Monday, should have been 0)
 // 52:20 
 
+// 2024-06-11 
+// "Add cycle counter and prints"
+/*
+==================================
+Initialising first test cycle... 
+Target time: 13:32:40
+Waiting for target time...
+Forced sync
+Starting new test cycle at: 
+Tue Jun 11 13:32:39 2024
+...
+==================================
+51 cycles completed at: 
+Tue Jun 11 14:32:09 2024
+*/
+
 int globalTestCounter = 0; // just for testing purposes
 
 
@@ -50,8 +66,8 @@ int globalTestCounter = 0; // just for testing purposes
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
 //TODO: add option to automatically switch between Freifunk and Rlb_Ampel -> force hotspot if available, continuously check
 const char* host = "ampel";
-const char* ssid = "one_solution_revolution"; // "radbahn.freifunk.berlin"; // "Rlb_Ampel"; // "Freifunk" for Freifunk?
-const char* password = "Lady_pluS_45"; // ""; // "Rlb_Ampel<3"; // NULL for Freifunk
+const char* ssid = "KarlPhone"; // "radbahn.freifunk.berlin"; //
+const char* password = "Lady_pluS_45"; // ""; // NULL for Freifunk
 // for use with Freifunk, simply omit the password
 
 // can't access webserver at 17:30  
@@ -109,12 +125,15 @@ void houseKeeping(void * parameter) {
     time(&now); 
     int currentHour = localtime(&now)->tm_hour;
     if (currentHour != lastNtpUpdate) { // rewritten to forceSync every hour
+      Serial.println("==New hour==");
+      lastNtpUpdate = currentHour; // this could be an issue? // don't remember why
+      forceSync = true; // forceSync in loop for urbanKompass
       if (currentHour % globalNtpUpdateInterval == 0) { // only sync every globalNtpUpdateInterval hours
         configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
         Serial.println("Synced to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
+        stopDisplay = true; // stop the display loop to force a sync
+        changedDisplayChoice = true; // to force a sync in the main loop
       }
-      lastNtpUpdate = currentHour; // this could be an issue? // don't remember why
-      forceSync = true; // forceSync in loop for urbanKompass
     }
 
     // Check if DST has changed and adjust the time accordingly
@@ -129,7 +148,11 @@ void houseKeeping(void * parameter) {
 
     // check if WiFi is still connected, attempt to reconnect if not. Not sure if this is necessary or if FreeROTS handles it, but it doesn't hurt to have it here.
     if (WiFi.status() != WL_CONNECTED) {   
+      dma_display->drawPixel(33, 0, dma_display->color565(50,0,0));
       connectToWiFiAndSetupMDNS(ssid, password, host);
+    } else {
+    // WiFi is connected, color the pixel green
+    dma_display->drawPixel(33, 0, dma_display->color565(0,50,0));
     }
     // all the server stuff is handled in the serverSetup() function
     server.handleClient();
@@ -189,7 +212,7 @@ void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int
 
   // Adjusts the target time for the early start of north traffic light
   if (targetSecond == 0) {
-    targetSecond = 60 - 1; // not sure why, but it kept being off by one second, so I'm compensating for that here 
+    targetSecond = 60 - 1; // the Ampel we sync to starts 1 second earlier
     if (targetMinute == 0) {
       targetMinute = 59;
       // still getting used to ternary operator. 
@@ -199,9 +222,49 @@ void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int
       targetMinute -= 1;
     }
   }
+  else {
+    targetSecond -= 1; // the Ampel we sync to starts 1 second earlier
+  }
 
   Serial.println("Target time: " + String(targetHour) + ":" + String(targetMinute) + ":" + String(targetSecond));
   Serial.println("Waiting for target time...");
+
+  //MARK: The do while loop NEEDS a way to break out of, if it missed the target time
+  /*
+Phase runtime:45956
+Adjusted runtime:46000
+Starting new main loop run at:
+Tue Jun 11 22:59:39 2024
+
+................................................Calculated error:23
+Phase runtime:23977
+Adjusted runtime:24000
+............................................................................................Calculated error:44
+Phase runtime:45956
+Adjusted runtime:46000
+Starting new main loop run at:
+Tue Jun 11 23:00:49 2024
+
+................................................Calculated error:22
+Phase runtime:23978
+Adjusted runtime:24000
+.........................................................................................
+Connected to KarlPhone
+IP address: 192.168.43.185
+mDNS responder started: http//ampel.local
+==New hour==
+Calculated error:44
+Phase runtime:45956
+Adjusted runtime:46000
+Starting new main loop run at:
+Tue Jun 11 23:01:59 2024
+
+Forced sync
+Target time: 23:1:59
+Waiting for target time...
+
+
+*/
 
   // wait until just before the target time is reached
   do {
@@ -209,7 +272,7 @@ void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int
     currentTime = localtime(&now);
     delay(100); // 1/10th of a second accuracy is good enough?
   // we can safely use targetSecond -1 because if 0 is the target, it will be set to 59 in the previous block
-  } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond - 1));
+  } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond));
 }
 
 
@@ -347,8 +410,8 @@ void loop() {
       // because we might be switching between display options, killing the loop and restarting it
       // also to force regular syncing (currently to internal clock only)
       if (changedDisplayChoice || forceSync) { 
-        syncedStart(); // sync to next available start time
         Serial.println("Forced sync");
+        syncedStart(); // sync to next available start time
 
         changedDisplayChoice = false; // reset the flags
         forceSync = false;
