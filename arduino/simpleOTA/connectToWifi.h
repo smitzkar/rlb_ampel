@@ -15,9 +15,17 @@ void connectToWiFiAndSetupMDNS(const char* ssid, const char* password, const cha
   }
   Serial.println("Connecting...");
 
-  while (WiFi.status() != WL_CONNECTED) {
+  int counter = 0;
+
+  while (WiFi.status() != WL_CONNECTED && counter < 120) { // lets this only run 1min at a time
     delay(500);
     Serial.print(".");
+    counter++;
+  }
+
+  if (counter == 120) {
+    Serial.println("Connection attempt failed.");
+    return;
   }
 
   // turn on led to indicate successful connection (NOT FOR THE LED MATRIX ESP32!)

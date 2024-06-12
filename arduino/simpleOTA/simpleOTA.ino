@@ -91,6 +91,7 @@ int globalTolerance = 3; // not currently used
 int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to the actual traffic light. (20s is 96m at 18km/h)
 
 int globalNtpUpdateInterval = 6; // in hours, how often it syncs the internal clock to the NTP server
+int lastRestart = -1; // minute at which urbanKompass is forced to restart for sync
 int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
 bool changedDisplayChoice = false; // to see if the display choice was changed during runtime
 bool forceSync = true; // start with true to make sure that it syncs urbanKompass on first run
@@ -118,6 +119,29 @@ int weekdayOffsets[7] = {60, 40, 20, 0, 50, 30, 10}; // in seconds,(0 = Monday, 
 void houseKeeping(void * parameter) {
   for (;;) { // Infinite loop to ensure that it runs forever -> same idea as void loop()
 
+
+    // New test version to force sync 
+    time_t now;
+    time(&now);
+    int currentMinute = localtime(&now)->tm_min;
+    int currentHour = localtime(&now)->tm_hour;
+    bool flag = false;
+
+    if (currentMinute != lastRestart && currentMinute%10 == 0){ // every 10min
+      lastRestart = currentMinute;
+      forceSync = true;
+      stopDisplay = true;
+      flag = true;
+    }
+    // no clue why this messes with the above, but can't have it in there
+    // only messes with it if not connected to wifi? -> with spotty Freifunk and no real way to communicate ota on it (as of yet), maybe just stick to using the hotspot every now and then...
+    if (flag && currentMinute % 20 == 0){ // flag because of above. WHAT A MESS!!
+      flag = false;
+      configTime(gmtOffset_sec, daylightOffset_sec, ntpServer);
+      Serial.println("Synced (or tried to) to NTP at: " + String(ctime(&now))); // Print the current time to the serial monitor
+    }
+    
+    /*
     // Update the time from the NTP server every globalNtpUpdateInterval hours 
     // TODO: use ticker library
     //TODO: use forceSync every hour to sync to internal clock? or just do it every x cycles? -> easier!
@@ -135,6 +159,7 @@ void houseKeeping(void * parameter) {
         changedDisplayChoice = true; // to force a sync in the main loop
       }
     }
+    */
 
     // Check if DST has changed and adjust the time accordingly
     // not pretty, but it works
@@ -147,6 +172,7 @@ void houseKeeping(void * parameter) {
     }
 
     // check if WiFi is still connected, attempt to reconnect if not. Not sure if this is necessary or if FreeROTS handles it, but it doesn't hurt to have it here.
+    // this might be a problematic bit of the housekeeping. could get stuck? it shouldn't. 
     if (WiFi.status() != WL_CONNECTED) {   
       dma_display->drawPixel(33, 0, dma_display->color565(50,0,0));
       connectToWiFiAndSetupMDNS(ssid, password, host);
@@ -162,36 +188,6 @@ void houseKeeping(void * parameter) {
 }
 
 
-// CAN'T THINK!!! redo this when the office is silent 
-// -> easier to use this to just call delayUntil() ?
-//MARK: dailyReset() (INACTIVE)
-// to replace syncToMinute()
-// Resets the display at a specific time every day to prevent time drift from potential inaccuracies 
-// To return the drift for analysis and adjustment
-// int dailyReset(int resetHour = 7, int resetMinute = 0) { // only use hours%7=0 to make things easy
-//   if (resetHour % 7 != 0) {
-//     Serial.println("Please use an hour that is a multiple of 7!");
-//     resetHour = 7; // default to 7 am if the input is invalid
-//   }
-
-//   time_t now;
-//   struct tm* currentTime;
-
-//   int minute = resetMinute - ?; // just to make it easier to read
-
-//   do {
-//     time(&now);
-//     currentTime = localtime(&now);
-//     Serial.println("Waiting for reset time...");
-//     delay(500); // half a second is good enough 
-//   } while (!(currentTime->tm_hour == resetHour 
-//           && currentTime->tm_min  == minute 
-//           && currentTime->tm_sec  == weekdayOffsets[currentTime->tm_wday]));
-
-//   return 0; // I want this to return the drift, but haven't implemented that yet
-// }
-
-
 //MARK: getCurrentTimeInSeconds()
 // simple helper function which calculates time in seconds since 00:00:00 for modulo calculations (daily drift due to 70s cycle-length)
 int getCurrentTimeInSeconds() {
@@ -204,7 +200,7 @@ int getCurrentTimeInSeconds() {
 //MARK: delayUntil
 // Delays until specified time, currently with a buffer of 1 second because of the early start of North traffic light
 // secondsBuffer isn't currently used
-void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int targetSecond, unsigned int secondsBuffer = 0) {
+void delayUntil(unsigned int targetHour, unsigned int targetMinute, unsigned int targetSecond, bool fromSyncedStart = false) {
   time_t now;
   struct tm* currentTime;
 
@@ -266,13 +262,24 @@ Waiting for target time...
 
 */
 
+  int counter = 10000000; 
+  // If called from syncedStart function, we need to make sure that it doesn't accidentally try to go "back in time"
+  if (fromSyncedStart){
+    counter = 0;
+  }
+
   // wait until just before the target time is reached
   do {
     time(&now);
     currentTime = localtime(&now);
     delay(100); // 1/10th of a second accuracy is good enough?
+    counter++;
+    if (counter >= 800 && counter < 10000000) { // ensures that it waits at max 80s, but only when fromSyncedStart
+      break;
+    }
   // we can safely use targetSecond -1 because if 0 is the target, it will be set to 59 in the previous block
   } while(!(currentTime->tm_hour == targetHour && currentTime->tm_min == targetMinute && currentTime->tm_sec == targetSecond));
+  Serial.println("Started");
 }
 
 
@@ -364,34 +371,14 @@ void loop() {
   // int currentOffset = 0;
   // int drift = 0; 
 
-  Serial.println("Starting new main loop run at:");
-  Serial.println(ctime(&now)); // Print the current time to the serial monitor
+  Serial.println("");
+  Serial.println("Starting new main loop run at: " + String(ctime(&now)));
 
   stopDisplay = false;        // reset the stopDisplay variable 
   dma_display->clearScreen(); // tabula rasa
 
   switch (displayChoice) {
     case 1: // urbanKompass
-
-      if (globalTestCounter == 0) { // only for testing purposes
-        Serial.println("==================================");
-        Serial.println("Initialising first test cycle... ");
-        syncedStart(); // sync to next available start time
-        Serial.println("Forced sync");
-        changedDisplayChoice = false; // reset the flags
-        forceSync = false;
-
-        Serial.println("Starting new test cycle at: ");
-        time(&now);
-        Serial.println(ctime(&now));
-      }
-      if (globalTestCounter == 51) { // only for testing purposes
-        Serial.println("==================================");
-        Serial.println("51 cycles completed at: ");
-        time(&now);
-        Serial.println(ctime(&now));
-      }
-      globalTestCounter++;
 
       // display the bike pictogram so even if waiting for the start, something is visible
       dma_display->drawBitmap(31, 0, bike_vertical_mono, 32, 32, dma_display->color565(255,255,255)); // 31 seems to work perfectly! is at the very edge of the display, cutting off that one empty row from the bitmap
