@@ -59,6 +59,8 @@ Tue Jun 11 13:32:39 2024
 Tue Jun 11 14:32:09 2024
 */
 
+// 2024-06-12 "Set to every hour, 6 hours"
+
 int globalTestCounter = 0; // just for testing purposes
 
 
@@ -91,7 +93,7 @@ int globalTolerance = 3; // not currently used
 int delayFromTrafficlight = 20; // TODO: in seconds, to adjust the blinking to the actual traffic light. (20s is 96m at 18km/h)
 
 int globalNtpUpdateInterval = 6; // in hours, how often it syncs the internal clock to the NTP server
-int lastRestart = -1; // minute at which urbanKompass is forced to restart for sync
+int lastRestartHour = -1; // hour at which urbanKompass was forced to restart for sync
 int displayChoice = 1; // 1 = urbanKompass, 2 = airly, 3 = iterateBitmaps, 4 = krueneWelle/testImages
 bool changedDisplayChoice = false; // to see if the display choice was changed during runtime
 bool forceSync = true; // start with true to make sure that it syncs urbanKompass on first run
@@ -127,8 +129,8 @@ void houseKeeping(void * parameter) {
     int currentHour = localtime(&now)->tm_hour;
     bool flag = false;
 
-    if (currentMinute != lastRestart && currentMinute == 0){ // every hour
-      lastRestart = currentMinute;
+    if (currentHour != lastRestartHour && currentMinute == 0){ // every hour
+      lastRestartHour = currentHour; // make sure it only runs once per hour
       forceSync = true;
       stopDisplay = true;
       flag = true;
