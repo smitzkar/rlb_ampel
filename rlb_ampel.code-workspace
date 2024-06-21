@@ -6,6 +6,10 @@
 		{
 			"name": "Rlb_Ampel",
 			"path": "../../Documents/PlatformIO/Projects/Rlb_Ampel"
+		},
+		{
+			"name": "krueneWelle",
+			"path": "arduino/krueneWelle"
 		}
 	],
 	"settings": {}
