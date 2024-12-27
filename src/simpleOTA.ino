@@ -41,8 +41,8 @@ Since I'm still struggling a bit with the FreeRTOS stuff:
 // I'm keeping them here for easier adjustment. Could also be moved to connectToWifi.h, then change the connectToWifiAndSetupMDNS function.
 // maybe use https://github.com/tzapu/WiFiManager ? (don't have to hardcode the ssid and password, can be set up via webserver. But no one can read out the code from esp32, anyway... and it's just for the open Freifunk network.) 
 const char* host = "ampel";
-const char* ssid = "Rlb_Ampel";
-const char* password = "Rlb_Ampel<3";
+const char* ssid = "one_solution_revolution"; //"Rlb_Ampel"; 
+const char* password = "Lady_pluS_45"; //"Rlb_Ampel<3";
 const char* ntpServer = "0.pool.ntp.org";
 const long  gmtOffset_sec = 3600;       // Offset for your timezone in seconds
 const int   daylightOffset_sec = 3600;  // Offset for daylight saving time in seconds
